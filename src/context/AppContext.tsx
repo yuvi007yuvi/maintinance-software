@@ -262,13 +262,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!supabase) return;
 
     const newId = `veh-${Date.now()}`;
+    // Exclude workshop_id because vehicles table in Postgres does not have this column
+    const { workshop_id: _unusedWorkshopId, ...validFields } = vehicleData as any;
     const newVehicle = {
-      ...vehicleData,
+      ...validFields,
       id: newId,
       assigned_zone_id: vehicleData.assigned_zone_id || null,
       assigned_ward_id: vehicleData.assigned_ward_id || null,
       assigned_driver_id: vehicleData.assigned_driver_id || null,
-      workshop_id: vehicleData.workshop_id || null,
     };
     
     const { data, error } = await supabase.from('vehicles').insert([newVehicle]).select().single();
@@ -287,10 +288,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!supabase) return;
 
     const cleanedUpdates = { ...updates };
-    if ('assigned_zone_id' in cleanedUpdates && !cleanedUpdates.assigned_zone_id) cleanedUpdates.assigned_zone_id = undefined;
-    if ('assigned_ward_id' in cleanedUpdates && !cleanedUpdates.assigned_ward_id) cleanedUpdates.assigned_ward_id = undefined;
-    if ('assigned_driver_id' in cleanedUpdates && !cleanedUpdates.assigned_driver_id) cleanedUpdates.assigned_driver_id = undefined;
-    if ('workshop_id' in cleanedUpdates && !cleanedUpdates.workshop_id) cleanedUpdates.workshop_id = undefined;
+    // Exclude workshop_id because vehicles table in Postgres does not have this column
+    delete (cleanedUpdates as any).workshop_id;
+    if ('assigned_zone_id' in cleanedUpdates && !cleanedUpdates.assigned_zone_id) (cleanedUpdates as any).assigned_zone_id = null;
+    if ('assigned_ward_id' in cleanedUpdates && !cleanedUpdates.assigned_ward_id) (cleanedUpdates as any).assigned_ward_id = null;
+    if ('assigned_driver_id' in cleanedUpdates && !cleanedUpdates.assigned_driver_id) (cleanedUpdates as any).assigned_driver_id = null;
 
     const { error } = await supabase.from('vehicles').update(cleanedUpdates).eq('id', id);
     
@@ -387,7 +389,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const bd = breakdowns.find((b) => b.id === breakdownId);
       if (bd) {
         if (nextStatus === 'Workshop Received') {
-          await updateVehicle(bd.vehicle_id, { status: 'Under Inspection', workshop_id: workshops[0]?.id });
+          await updateVehicle(bd.vehicle_id, { status: 'Under Inspection' });
         } else if (nextStatus === 'Repair') {
           await updateVehicle(bd.vehicle_id, { status: 'Under Repair' });
         } else if (nextStatus === 'Completed') {
@@ -435,7 +437,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!error && data) {
       setJobCards((prev) => [data as JobCard, ...prev]);
       await advanceBreakdownStatus(breakdownId, 'Diagnosis');
-      await updateVehicle(bd.vehicle_id, { status: 'Under Repair', workshop_id: workshopId });
+      await updateVehicle(bd.vehicle_id, { status: 'Under Repair' });
 
       await addAuditLog('job_card', newJcId, 'CREATE_JOB_CARD', {
         job_card_number: jcNumber,
