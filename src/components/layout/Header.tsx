@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
-import { UserRole } from '../../types';
+import type { UserRole } from '../../types';
 import { getSupabaseConfig } from '../../lib/supabase';
 
 interface HeaderProps {

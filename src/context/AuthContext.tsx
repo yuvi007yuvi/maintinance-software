@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { UserProfile, UserRole } from '../types';
-import { initialUsers } from '../data/mockData';
+import type { UserProfile, UserRole } from '../types';
 
 interface AuthContextType {
   currentRole: UserRole;
@@ -22,8 +21,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<UserRole>('nagar_nigam_officer');
 
-  // Find representative user for the selected role
-  const currentUser = initialUsers.find((u) => u.role === currentRole) || initialUsers[0];
+  // Create a default user representing the current role
+  const currentUser: UserProfile = {
+    id: `user-${currentRole}`,
+    full_name: `${currentRole.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} User`,
+    email: `${currentRole}@example.com`,
+    phone: '',
+    role: currentRole,
+    is_active: true
+  };
 
   const canReportBreakdown = ['super_admin', 'fleet_manager', 'driver', 'nagar_nigam_officer', 'project_manager'].includes(currentRole);
   const canAcknowledgeBreakdown = ['super_admin', 'fleet_manager', 'nagar_nigam_officer'].includes(currentRole);

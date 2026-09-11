@@ -1,4 +1,4 @@
-import {
+import type {
   AuditLog,
   Breakdown,
   JobCard,
@@ -12,20 +12,6 @@ import {
   Workshop,
   Zone,
 } from '../types';
-import {
-  initialAuditLogs,
-  initialBreakdowns,
-  initialJobCardParts,
-  initialJobCards,
-  initialMaintenanceSchedules,
-  initialParts,
-  initialRedeployments,
-  initialUsers,
-  initialVehicles,
-  initialWards,
-  initialWorkshops,
-  initialZones,
-} from '../data/mockData';
 import { getSupabaseClient } from './supabase';
 
 const STORAGE_KEYS = {
@@ -62,34 +48,34 @@ function setToLocal<T>(key: string, value: T): void {
 }
 
 export const storage = {
-  getVehicles: (): Vehicle[] => getFromLocal(STORAGE_KEYS.VEHICLES, initialVehicles),
+  getVehicles: (): Vehicle[] => getFromLocal(STORAGE_KEYS.VEHICLES, []),
   saveVehicles: (data: Vehicle[]) => setToLocal(STORAGE_KEYS.VEHICLES, data),
 
-  getBreakdowns: (): Breakdown[] => getFromLocal(STORAGE_KEYS.BREAKDOWNS, initialBreakdowns),
+  getBreakdowns: (): Breakdown[] => getFromLocal(STORAGE_KEYS.BREAKDOWNS, []),
   saveBreakdowns: (data: Breakdown[]) => setToLocal(STORAGE_KEYS.BREAKDOWNS, data),
 
-  getJobCards: (): JobCard[] => getFromLocal(STORAGE_KEYS.JOB_CARDS, initialJobCards),
+  getJobCards: (): JobCard[] => getFromLocal(STORAGE_KEYS.JOB_CARDS, []),
   saveJobCards: (data: JobCard[]) => setToLocal(STORAGE_KEYS.JOB_CARDS, data),
 
-  getParts: (): Part[] => getFromLocal(STORAGE_KEYS.PARTS, initialParts),
+  getParts: (): Part[] => getFromLocal(STORAGE_KEYS.PARTS, []),
   saveParts: (data: Part[]) => setToLocal(STORAGE_KEYS.PARTS, data),
 
-  getJobCardParts: (): JobCardPart[] => getFromLocal(STORAGE_KEYS.JOB_CARD_PARTS, initialJobCardParts),
+  getJobCardParts: (): JobCardPart[] => getFromLocal(STORAGE_KEYS.JOB_CARD_PARTS, []),
   saveJobCardParts: (data: JobCardPart[]) => setToLocal(STORAGE_KEYS.JOB_CARD_PARTS, data),
 
-  getRedeployments: (): Redeployment[] => getFromLocal(STORAGE_KEYS.REDEPLOYMENTS, initialRedeployments),
+  getRedeployments: (): Redeployment[] => getFromLocal(STORAGE_KEYS.REDEPLOYMENTS, []),
   saveRedeployments: (data: Redeployment[]) => setToLocal(STORAGE_KEYS.REDEPLOYMENTS, data),
 
-  getMaintenance: (): MaintenanceSchedule[] => getFromLocal(STORAGE_KEYS.MAINTENANCE, initialMaintenanceSchedules),
+  getMaintenance: (): MaintenanceSchedule[] => getFromLocal(STORAGE_KEYS.MAINTENANCE, []),
   saveMaintenance: (data: MaintenanceSchedule[]) => setToLocal(STORAGE_KEYS.MAINTENANCE, data),
 
-  getAuditLogs: (): AuditLog[] => getFromLocal(STORAGE_KEYS.AUDIT_LOGS, initialAuditLogs),
+  getAuditLogs: (): AuditLog[] => getFromLocal(STORAGE_KEYS.AUDIT_LOGS, []),
   saveAuditLogs: (data: AuditLog[]) => setToLocal(STORAGE_KEYS.AUDIT_LOGS, data),
 
-  getUsers: (): UserProfile[] => getFromLocal(STORAGE_KEYS.USERS, initialUsers),
-  getWards: (): Ward[] => getFromLocal(STORAGE_KEYS.WARDS, initialWards),
-  getZones: (): Zone[] => getFromLocal(STORAGE_KEYS.ZONES, initialZones),
-  getWorkshops: (): Workshop[] => getFromLocal(STORAGE_KEYS.WORKSHOPS, initialWorkshops),
+  getUsers: (): UserProfile[] => getFromLocal(STORAGE_KEYS.USERS, []),
+  getWards: (): Ward[] => getFromLocal(STORAGE_KEYS.WARDS, []),
+  getZones: (): Zone[] => getFromLocal(STORAGE_KEYS.ZONES, []),
+  getWorkshops: (): Workshop[] => getFromLocal(STORAGE_KEYS.WORKSHOPS, []),
 
   resetToDefault: () => {
     Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));

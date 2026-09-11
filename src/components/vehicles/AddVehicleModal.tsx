@@ -35,21 +35,31 @@ export const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ isOpen, onClos
     current_odometer_km: 1500,
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.registration_number.trim()) {
-      alert('Please enter a valid Registration Number (e.g. UP81 BT 1024)');
+      setError('Please enter a valid Registration Number (e.g. UP81 BT 1024)');
       return;
     }
 
-    addVehicle({
-      ...formData,
-      registration_number: formData.registration_number.trim().toUpperCase(),
-    });
-
-    onClose();
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await addVehicle({
+        ...formData,
+        registration_number: formData.registration_number.trim().toUpperCase(),
+      });
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Failed to register vehicle.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -201,20 +211,29 @@ export const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ isOpen, onClos
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors shadow-lg shadow-emerald-600/20"
-            >
-              Register Vehicle
-            </button>
+          <div className="pt-4 border-t border-slate-800 flex flex-col gap-3">
+            {error && (
+              <div className="text-red-400 text-xs bg-red-400/10 border border-red-400/20 p-2 rounded-lg">
+                {error}
+              </div>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors shadow-lg shadow-emerald-600/20 disabled:opacity-50 flex items-center justify-center min-w-[120px]"
+              >
+                {isSubmitting ? 'Registering...' : 'Register Vehicle'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

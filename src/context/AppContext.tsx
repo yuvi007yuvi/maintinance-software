@@ -16,7 +16,7 @@ import type {
   Workshop,
   Zone,
 } from '../types';
-import { storage } from '../lib/storage';
+import { getSupabaseClient } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 interface AppContextType {
@@ -38,8 +38,8 @@ interface AppContextType {
   setTargetAvailability: (target: number) => void;
 
   // Actions
-  addVehicle: (vehicle: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => void;
-  updateVehicle: (id: string, updates: Partial<Vehicle>) => void;
+  addVehicle: (vehicle: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  updateVehicle: (id: string, updates: Partial<Vehicle>) => Promise<void>;
   reportBreakdown: (data: {
     vehicle_id: string;
     driver_id?: string;
@@ -51,14 +51,14 @@ interface AppContextType {
     severity: 'Low' | 'Medium' | 'High' | 'Critical';
     vehicle_condition?: string;
     photo_url?: string;
-  }) => string;
-  acknowledgeBreakdown: (breakdownId: string) => void;
-  advanceBreakdownStatus: (breakdownId: string, nextStatus: BreakdownStatus) => void;
-  createJobCardFromBreakdown: (breakdownId: string, workshopId: string, assignedMechanicId?: string) => string;
-  updateJobCard: (id: string, updates: Partial<JobCard>) => void;
-  advanceJobCardStatus: (jobCardId: string, nextStatus: JobCardStatus, remarks?: string) => void;
-  issuePartToJobCard: (jobCardId: string, partId: string, quantity: number) => { success: boolean; message: string };
-  approveAndCloseJobCard: (jobCardId: string, remarks?: string) => void;
+  }) => Promise<string>;
+  acknowledgeBreakdown: (breakdownId: string) => Promise<void>;
+  advanceBreakdownStatus: (breakdownId: string, nextStatus: BreakdownStatus) => Promise<void>;
+  createJobCardFromBreakdown: (breakdownId: string, workshopId: string, assignedMechanicId?: string) => Promise<string>;
+  updateJobCard: (id: string, updates: Partial<JobCard>) => Promise<void>;
+  advanceJobCardStatus: (jobCardId: string, nextStatus: JobCardStatus, remarks?: string) => Promise<void>;
+  issuePartToJobCard: (jobCardId: string, partId: string, quantity: number) => Promise<{ success: boolean; message: string }>;
+  approveAndCloseJobCard: (jobCardId: string, remarks?: string) => Promise<void>;
   assignRedeployment: (data: {
     original_vehicle_id: string;
     replacement_vehicle_id: string;
@@ -67,13 +67,14 @@ interface AppContextType {
     deployment_location: string;
     assigned_driver_id?: string;
     reason: string;
-  }) => void;
-  releaseRedeployment: (redeploymentId: string) => void;
-  addPart: (part: Omit<Part, 'id' | 'created_at'>) => void;
-  adjustPartStock: (partId: string, quantityDelta: number, transactionType: 'purchase' | 'issue' | 'return' | 'adjustment', remarks: string) => void;
-  addMaintenanceSchedule: (schedule: Omit<MaintenanceSchedule, 'id' | 'created_at'>) => void;
-  completeMaintenance: (scheduleId: string) => void;
-  resetAllData: () => void;
+  }) => Promise<void>;
+  releaseRedeployment: (redeploymentId: string) => Promise<void>;
+  addPart: (part: Omit<Part, 'id' | 'created_at'>) => Promise<void>;
+  adjustPartStock: (partId: string, quantityDelta: number, transactionType: 'purchase' | 'issue' | 'return' | 'adjustment', remarks: string) => Promise<void>;
+  addMaintenanceSchedule: (schedule: Omit<MaintenanceSchedule, 'id' | 'created_at'>) => Promise<void>;
+  completeMaintenance: (scheduleId: string) => Promise<void>;
+  resetAllData: () => Promise<void>;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -81,38 +82,89 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAuth();
 
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => storage.getVehicles());
-  const [breakdowns, setBreakdowns] = useState<Breakdown[]>(() => storage.getBreakdowns());
-  const [jobCards, setJobCards] = useState<JobCard[]>(() => storage.getJobCards());
-  const [parts, setParts] = useState<Part[]>(() => storage.getParts());
-  const [jobCardParts, setJobCardParts] = useState<JobCardPart[]>(() => storage.getJobCardParts());
-  const [redeployments, setRedeployments] = useState<Redeployment[]>(() => storage.getRedeployments());
-  const [maintenanceSchedules, setMaintenanceSchedules] = useState<MaintenanceSchedule[]>(() => storage.getMaintenance());
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => storage.getAuditLogs());
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [breakdowns, setBreakdowns] = useState<Breakdown[]>([]);
+  const [jobCards, setJobCards] = useState<JobCard[]>([]);
+  const [parts, setParts] = useState<Part[]>([]);
+  const [jobCardParts, setJobCardParts] = useState<JobCardPart[]>([]);
+  const [redeployments, setRedeployments] = useState<Redeployment[]>([]);
+  const [maintenanceSchedules, setMaintenanceSchedules] = useState<MaintenanceSchedule[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  
   const [targetAvailability, setTargetAvailability] = useState<number>(85);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const workshops = storage.getWorkshops();
-  const wards = storage.getWards();
-  const zones = storage.getZones();
-  const users = storage.getUsers();
+  const fetchInitialData = async () => {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
 
-  // Save to storage on changes
-  useEffect(() => { storage.saveVehicles(vehicles); }, [vehicles]);
-  useEffect(() => { storage.saveBreakdowns(breakdowns); }, [breakdowns]);
-  useEffect(() => { storage.saveJobCards(jobCards); }, [jobCards]);
-  useEffect(() => { storage.saveParts(parts); }, [parts]);
-  useEffect(() => { storage.saveJobCardParts(jobCardParts); }, [jobCardParts]);
-  useEffect(() => { storage.saveRedeployments(redeployments); }, [redeployments]);
-  useEffect(() => { storage.saveMaintenance(maintenanceSchedules); }, [maintenanceSchedules]);
-  useEffect(() => { storage.saveAuditLogs(auditLogs); }, [auditLogs]);
+    setIsLoading(true);
+    try {
+      const [
+        { data: vehiclesData },
+        { data: breakdownsData },
+        { data: jobCardsData },
+        { data: partsData },
+        { data: jobCardPartsData },
+        { data: redeploymentsData },
+        { data: maintenanceData },
+        { data: workshopsData },
+        { data: wardsData },
+        { data: zonesData },
+        { data: usersData }
+      ] = await Promise.all([
+        supabase.from('vehicles').select('*').order('created_at', { ascending: false }),
+        supabase.from('breakdowns').select('*').order('created_at', { ascending: false }),
+        supabase.from('job_cards').select('*').order('created_at', { ascending: false }),
+        supabase.from('parts').select('*').order('created_at', { ascending: false }),
+        supabase.from('job_card_parts').select('*').order('created_at', { ascending: false }),
+        supabase.from('redeployments').select('*').order('created_at', { ascending: false }),
+        supabase.from('maintenance_schedules').select('*').order('created_at', { ascending: false }),
+        supabase.from('workshops').select('*'),
+        supabase.from('wards').select('*'),
+        supabase.from('zones').select('*'),
+        supabase.from('user_profiles').select('*')
+      ]);
 
-  const addAuditLog = (
+      if (vehiclesData) setVehicles(vehiclesData as Vehicle[]);
+      if (breakdownsData) setBreakdowns(breakdownsData as Breakdown[]);
+      if (jobCardsData) setJobCards(jobCardsData as JobCard[]);
+      if (partsData) setParts(partsData as Part[]);
+      if (jobCardPartsData) setJobCardParts(jobCardPartsData as JobCardPart[]);
+      if (redeploymentsData) setRedeployments(redeploymentsData as Redeployment[]);
+      if (maintenanceData) setMaintenanceSchedules(maintenanceData as MaintenanceSchedule[]);
+      if (workshopsData) setWorkshops(workshopsData as Workshop[]);
+      if (wardsData) setWards(wardsData as Ward[]);
+      if (zonesData) setZones(zonesData as Zone[]);
+      if (usersData) setUsers(usersData as UserProfile[]);
+    } catch (error) {
+      console.error('Error fetching data from Supabase:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  const addAuditLog = async (
     entity_name: AuditLog['entity_name'],
     entity_id: string,
     action: string,
     details?: Record<string, any>
   ) => {
-    const newLog: AuditLog = {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const newLog = {
       id: `aud-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       entity_name,
       entity_id,
@@ -120,9 +172,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       performed_by: currentUser.full_name,
       performed_by_role: currentUser.role,
       details,
-      created_at: new Date().toISOString(),
     };
-    setAuditLogs((prev) => [newLog, ...prev]);
+
+    const { error } = await supabase.from('audit_logs').insert([newLog]);
+    if (!error) {
+      setAuditLogs((prev) => [newLog as AuditLog, ...prev]);
+    }
   };
 
   // Calculate KPIs
@@ -138,7 +193,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const operationalVehicles = availableVehicles + deployedVehicles + readyForDeploymentVehicles;
   const availabilityPercentage = totalFleet > 0 ? Math.round((operationalVehicles / totalFleet) * 100) : 0;
 
-  // Calculate total downtime hours across active breakdowns + completed
   let totalDowntimeHours = 0;
   breakdowns.forEach((b) => {
     const start = new Date(b.breakdown_date).getTime();
@@ -185,26 +239,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Actions implementation
-  const addVehicle = (vehicleData: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => {
+  const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
     const newId = `veh-${Date.now()}`;
-    const newVehicle: Vehicle = {
+    const newVehicle = {
       ...vehicleData,
       id: newId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
-    setVehicles((prev) => [newVehicle, ...prev]);
-    addAuditLog('vehicle', newId, 'REGISTER_VEHICLE', { registration: newVehicle.registration_number });
+    
+    const { data, error } = await supabase.from('vehicles').insert([newVehicle]).select().single();
+    
+    if (!error && data) {
+      setVehicles((prev) => [data as Vehicle, ...prev]);
+      await addAuditLog('vehicle', newId, 'REGISTER_VEHICLE', { registration: newVehicle.registration_number });
+    } else {
+      console.error(error);
+      throw new Error(error?.message || 'Failed to add vehicle');
+    }
   };
 
-  const updateVehicle = (id: string, updates: Partial<Vehicle>) => {
-    setVehicles((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, ...updates, updated_at: new Date().toISOString() } : v))
-    );
-    addAuditLog('vehicle', id, 'UPDATE_VEHICLE', updates);
+  const updateVehicle = async (id: string, updates: Partial<Vehicle>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const { error } = await supabase.from('vehicles').update(updates).eq('id', id);
+    
+    if (!error) {
+      setVehicles((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, ...updates, updated_at: new Date().toISOString() } : v))
+      );
+      await addAuditLog('vehicle', id, 'UPDATE_VEHICLE', updates);
+    } else {
+      console.error(error);
+      throw new Error(error.message);
+    }
   };
 
-  const reportBreakdown = (data: {
+  const reportBreakdown = async (data: {
     vehicle_id: string;
     driver_id?: string;
     reported_by: string;
@@ -215,84 +288,102 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     severity: 'Low' | 'Medium' | 'High' | 'Critical';
     vehicle_condition?: string;
     photo_url?: string;
-  }): string => {
+  }): Promise<string> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("No Supabase client");
+
     const newId = `bk-${Date.now()}`;
     const breakdownNumber = `BD-${new Date().getFullYear()}-${String(breakdowns.length + 90).padStart(4, '0')}`;
-    const newBreakdown: Breakdown = {
+    const newBreakdown = {
       ...data,
       id: newId,
       breakdown_number: breakdownNumber,
-      breakdown_date: new Date().toISOString(),
       status: 'Reported',
-      created_at: new Date().toISOString(),
     };
 
-    setBreakdowns((prev) => [newBreakdown, ...prev]);
-    updateVehicle(data.vehicle_id, { status: 'Breakdown' });
-    addAuditLog('breakdown', newId, 'REPORT_BREAKDOWN', {
-      breakdown_number: breakdownNumber,
-      problem: data.problem_description,
-      severity: data.severity,
-    });
+    const { data: insertedData, error } = await supabase.from('breakdowns').insert([newBreakdown]).select().single();
 
-    return newId;
-  };
-
-  const acknowledgeBreakdown = (breakdownId: string) => {
-    const nowIso = new Date().toISOString();
-    setBreakdowns((prev) =>
-      prev.map((b) =>
-        b.id === breakdownId
-          ? {
-              ...b,
-              status: 'Acknowledged',
-              acknowledged_by: currentUser.id,
-              acknowledged_at: nowIso,
-            }
-          : b
-      )
-    );
-    addAuditLog('breakdown', breakdownId, 'ACKNOWLEDGE_BREAKDOWN', { acknowledged_by: currentUser.full_name });
-  };
-
-  const advanceBreakdownStatus = (breakdownId: string, nextStatus: BreakdownStatus) => {
-    const nowIso = new Date().toISOString();
-    setBreakdowns((prev) =>
-      prev.map((b) => {
-        if (b.id !== breakdownId) return b;
-        const updates: Partial<Breakdown> = { status: nextStatus };
-        if (nextStatus === 'Vehicle Collected') updates.collected_at = nowIso;
-        if (nextStatus === 'Workshop Received') updates.workshop_received_at = nowIso;
-        return { ...b, ...updates };
-      })
-    );
-
-    const bd = breakdowns.find((b) => b.id === breakdownId);
-    if (bd) {
-      if (nextStatus === 'Workshop Received') {
-        updateVehicle(bd.vehicle_id, { status: 'Under Inspection', workshop_id: workshops[0]?.id });
-      } else if (nextStatus === 'Repair') {
-        updateVehicle(bd.vehicle_id, { status: 'Under Repair' });
-      } else if (nextStatus === 'Completed') {
-        updateVehicle(bd.vehicle_id, { status: 'Ready for Deployment' });
-      }
+    if (!error && insertedData) {
+      setBreakdowns((prev) => [insertedData as Breakdown, ...prev]);
+      await updateVehicle(data.vehicle_id, { status: 'Breakdown' });
+      await addAuditLog('breakdown', newId, 'REPORT_BREAKDOWN', {
+        breakdown_number: breakdownNumber,
+        problem: data.problem_description,
+        severity: data.severity,
+      });
+      return newId;
+    } else {
+      console.error(error);
+      throw new Error(error?.message || 'Failed to report breakdown');
     }
-
-    addAuditLog('breakdown', breakdownId, 'UPDATE_BREAKDOWN_STATUS', { new_status: nextStatus });
   };
 
-  const createJobCardFromBreakdown = (
+  const acknowledgeBreakdown = async (breakdownId: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+    
+    const nowIso = new Date().toISOString();
+    const updates = {
+      status: 'Acknowledged',
+      acknowledged_by: currentUser.id,
+      acknowledged_at: nowIso,
+    };
+
+    const { error } = await supabase.from('breakdowns').update(updates).eq('id', breakdownId);
+    if (!error) {
+      setBreakdowns((prev) =>
+        prev.map((b) => (b.id === breakdownId ? { ...b, ...updates } as Breakdown : b))
+      );
+      await addAuditLog('breakdown', breakdownId, 'ACKNOWLEDGE_BREAKDOWN', { acknowledged_by: currentUser.full_name });
+    }
+  };
+
+  const advanceBreakdownStatus = async (breakdownId: string, nextStatus: BreakdownStatus) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const nowIso = new Date().toISOString();
+    const updates: Partial<Breakdown> = { status: nextStatus };
+    if (nextStatus === 'Vehicle Collected') updates.collected_at = nowIso;
+    if (nextStatus === 'Workshop Received') updates.workshop_received_at = nowIso;
+
+    const { error } = await supabase.from('breakdowns').update(updates).eq('id', breakdownId);
+    
+    if (!error) {
+      setBreakdowns((prev) =>
+        prev.map((b) => (b.id === breakdownId ? { ...b, ...updates } as Breakdown : b))
+      );
+
+      const bd = breakdowns.find((b) => b.id === breakdownId);
+      if (bd) {
+        if (nextStatus === 'Workshop Received') {
+          await updateVehicle(bd.vehicle_id, { status: 'Under Inspection', workshop_id: workshops[0]?.id });
+        } else if (nextStatus === 'Repair') {
+          await updateVehicle(bd.vehicle_id, { status: 'Under Repair' });
+        } else if (nextStatus === 'Completed') {
+          await updateVehicle(bd.vehicle_id, { status: 'Ready for Deployment' });
+        }
+      }
+
+      await addAuditLog('breakdown', breakdownId, 'UPDATE_BREAKDOWN_STATUS', { new_status: nextStatus });
+    }
+  };
+
+  const createJobCardFromBreakdown = async (
     breakdownId: string,
     workshopId: string,
     assignedMechanicId?: string
-  ): string => {
+  ): Promise<string> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new Error("No supabase client");
+
     const bd = breakdowns.find((b) => b.id === breakdownId);
-    if (!bd) return '';
+    if (!bd) throw new Error('Breakdown not found');
 
     const newJcId = `jc-${Date.now()}`;
     const jcNumber = `JC-${new Date().getFullYear()}-${String(jobCards.length + 146).padStart(4, '0')}`;
 
-    const newJobCard: JobCard = {
+    const newJobCard = {
       id: newJcId,
       job_card_number: jcNumber,
       breakdown_id: breakdownId,
@@ -304,61 +395,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       assigned_mechanic_id: assignedMechanicId,
       estimated_cost: 5000,
       actual_cost: 0,
-      work_started_at: new Date().toISOString(),
       inspection_status: 'Pending',
       status: assignedMechanicId ? 'Assigned' : 'Open',
       remarks: `Generated from Breakdown ${bd.breakdown_number}`,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
 
-    setJobCards((prev) => [newJobCard, ...prev]);
-    advanceBreakdownStatus(breakdownId, 'Diagnosis');
-    updateVehicle(bd.vehicle_id, { status: 'Under Repair', workshop_id: workshopId });
+    const { data, error } = await supabase.from('job_cards').insert([newJobCard]).select().single();
 
-    addAuditLog('job_card', newJcId, 'CREATE_JOB_CARD', {
-      job_card_number: jcNumber,
-      vehicle_id: bd.vehicle_id,
-      assigned_to: assignedMechanicId,
-    });
+    if (!error && data) {
+      setJobCards((prev) => [data as JobCard, ...prev]);
+      await advanceBreakdownStatus(breakdownId, 'Diagnosis');
+      await updateVehicle(bd.vehicle_id, { status: 'Under Repair', workshop_id: workshopId });
 
-    return newJcId;
+      await addAuditLog('job_card', newJcId, 'CREATE_JOB_CARD', {
+        job_card_number: jcNumber,
+        vehicle_id: bd.vehicle_id,
+        assigned_to: assignedMechanicId,
+      });
+
+      return newJcId;
+    } else {
+      throw new Error(error?.message || 'Failed to create Job Card');
+    }
   };
 
-  const updateJobCard = (id: string, updates: Partial<JobCard>) => {
-    setJobCards((prev) =>
-      prev.map((jc) => (jc.id === id ? { ...jc, ...updates, updated_at: new Date().toISOString() } : jc))
-    );
-    addAuditLog('job_card', id, 'UPDATE_JOB_CARD', updates);
+  const updateJobCard = async (id: string, updates: Partial<JobCard>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const { error } = await supabase.from('job_cards').update(updates).eq('id', id);
+    if (!error) {
+      setJobCards((prev) =>
+        prev.map((jc) => (jc.id === id ? { ...jc, ...updates, updated_at: new Date().toISOString() } : jc))
+      );
+      await addAuditLog('job_card', id, 'UPDATE_JOB_CARD', updates);
+    }
   };
 
-  const advanceJobCardStatus = (jobCardId: string, nextStatus: JobCardStatus, remarks?: string) => {
+  const advanceJobCardStatus = async (jobCardId: string, nextStatus: JobCardStatus, remarks?: string) => {
     const jc = jobCards.find((j) => j.id === jobCardId);
     if (!jc) return;
 
     const updates: Partial<JobCard> = { status: nextStatus, remarks: remarks || jc.remarks };
     if (nextStatus === 'Repair' && !jc.work_started_at) {
       updates.work_started_at = new Date().toISOString();
-      updateVehicle(jc.vehicle_id, { status: 'Under Repair' });
+      await updateVehicle(jc.vehicle_id, { status: 'Under Repair' });
     }
     if (nextStatus === 'Inspection') {
       updates.work_completed_at = new Date().toISOString();
-      updateVehicle(jc.vehicle_id, { status: 'Under Inspection' });
+      await updateVehicle(jc.vehicle_id, { status: 'Under Inspection' });
     }
     if (nextStatus === 'Closed') {
       updates.closed_at = new Date().toISOString();
-      updateVehicle(jc.vehicle_id, { status: 'Ready for Deployment' });
+      await updateVehicle(jc.vehicle_id, { status: 'Ready for Deployment' });
     }
 
-    updateJobCard(jobCardId, updates);
-    addAuditLog('job_card', jobCardId, 'ADVANCE_JOB_CARD_STATUS', { new_status: nextStatus, remarks });
+    await updateJobCard(jobCardId, updates);
+    await addAuditLog('job_card', jobCardId, 'ADVANCE_JOB_CARD_STATUS', { new_status: nextStatus, remarks });
   };
 
-  const issuePartToJobCard = (
+  const issuePartToJobCard = async (
     jobCardId: string,
     partId: string,
     quantity: number
-  ): { success: boolean; message: string } => {
+  ): Promise<{ success: boolean; message: string }> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return { success: false, message: 'No db connection' };
+
     const part = parts.find((p) => p.id === partId);
     if (!part) return { success: false, message: 'Part not found' };
     if (part.current_stock < quantity) {
@@ -368,41 +471,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    // Deduct stock from parts
-    setParts((prev) =>
-      prev.map((p) => (p.id === partId ? { ...p, current_stock: p.current_stock - quantity } : p))
-    );
-
     const cost = quantity * part.purchase_price;
-    const newJcp: JobCardPart = {
+    const newJcp = {
       id: `jcp-${Date.now()}`,
       job_card_id: jobCardId,
       part_id: partId,
       quantity,
       unit_price: part.purchase_price,
-      total_cost: cost,
       issued_by: currentUser.id,
-      issued_at: new Date().toISOString(),
     };
 
-    setJobCardParts((prev) => [newJcp, ...prev]);
+    const { data, error } = await supabase.from('job_card_parts').insert([newJcp]).select().single();
+    if (!error && data) {
+      // triggers in DB will update inventory and job card actual cost
+      await fetchInitialData(); // refresh to get updated stock and actual cost
+      
+      await addAuditLog('part', partId, 'ISSUE_TO_JOB_CARD', {
+        part_name: part.part_name,
+        job_card_id: jobCardId,
+        quantity,
+        cost,
+      });
 
-    // Update job card actual cost
-    setJobCards((prev) =>
-      prev.map((jc) => (jc.id === jobCardId ? { ...jc, actual_cost: (jc.actual_cost || 0) + cost } : jc))
-    );
-
-    addAuditLog('part', partId, 'ISSUE_TO_JOB_CARD', {
-      part_name: part.part_name,
-      job_card_id: jobCardId,
-      quantity,
-      cost,
-    });
-
-    return { success: true, message: `Successfully issued ${quantity} ${part.unit} of ${part.part_name}` };
+      return { success: true, message: `Successfully issued ${quantity} ${part.unit} of ${part.part_name}` };
+    }
+    
+    return { success: false, message: error?.message || 'Failed' };
   };
 
-  const approveAndCloseJobCard = (jobCardId: string, remarks?: string) => {
+  const approveAndCloseJobCard = async (jobCardId: string, remarks?: string) => {
     const jc = jobCards.find((j) => j.id === jobCardId);
     if (!jc) return;
 
@@ -416,20 +513,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       remarks: remarks || jc.remarks || 'Work verified and approved for redeployment.',
     };
 
-    updateJobCard(jobCardId, updates);
-    updateVehicle(jc.vehicle_id, { status: 'Ready for Deployment' });
+    await updateJobCard(jobCardId, updates);
+    await updateVehicle(jc.vehicle_id, { status: 'Ready for Deployment' });
 
     if (jc.breakdown_id) {
-      advanceBreakdownStatus(jc.breakdown_id, 'Completed');
+      await advanceBreakdownStatus(jc.breakdown_id, 'Completed');
     }
 
-    addAuditLog('job_card', jobCardId, 'APPROVE_AND_CLOSE', {
+    await addAuditLog('job_card', jobCardId, 'APPROVE_AND_CLOSE', {
       approved_by: currentUser.full_name,
       remarks,
     });
   };
 
-  const assignRedeployment = (data: {
+  const assignRedeployment = async (data: {
     original_vehicle_id: string;
     replacement_vehicle_id: string;
     ward_id: string;
@@ -438,113 +535,148 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     assigned_driver_id?: string;
     reason: string;
   }) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
     const newId = `rd-${Date.now()}`;
-    const newRedeployment: Redeployment = {
+    const newRedeployment = {
       ...data,
       id: newId,
-      deployment_date: new Date().toISOString(),
       status: 'Active',
       approved_by: currentUser.id,
-      created_at: new Date().toISOString(),
     };
 
-    setRedeployments((prev) => [newRedeployment, ...prev]);
-    // Set replacement vehicle as running/deployed in the designated ward
-    updateVehicle(data.replacement_vehicle_id, {
-      status: 'Running',
-      assigned_ward_id: data.ward_id,
-      assigned_zone_id: data.zone_id,
-      assigned_driver_id: data.assigned_driver_id,
-    });
+    const { data: insertedData, error } = await supabase.from('redeployments').insert([newRedeployment]).select().single();
+    
+    if (!error && insertedData) {
+      setRedeployments((prev) => [insertedData as Redeployment, ...prev]);
+      await updateVehicle(data.replacement_vehicle_id, {
+        status: 'Running',
+        assigned_ward_id: data.ward_id,
+        assigned_zone_id: data.zone_id,
+        assigned_driver_id: data.assigned_driver_id,
+      });
 
-    addAuditLog('redeployment', newId, 'ASSIGN_REPLACEMENT', {
-      original_vehicle: data.original_vehicle_id,
-      replacement_vehicle: data.replacement_vehicle_id,
-      ward: data.ward_id,
-    });
+      await addAuditLog('redeployment', newId, 'ASSIGN_REPLACEMENT', {
+        original_vehicle: data.original_vehicle_id,
+        replacement_vehicle: data.replacement_vehicle_id,
+        ward: data.ward_id,
+      });
+    }
   };
 
-  const releaseRedeployment = (redeploymentId: string) => {
+  const releaseRedeployment = async (redeploymentId: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
     const rd = redeployments.find((r) => r.id === redeploymentId);
     if (!rd) return;
 
     const nowIso = new Date().toISOString();
-    setRedeployments((prev) =>
-      prev.map((r) => (r.id === redeploymentId ? { ...r, status: 'Released', release_date: nowIso } : r))
-    );
+    const { error } = await supabase.from('redeployments').update({ status: 'Released', release_date: nowIso }).eq('id', redeploymentId);
 
-    // Return replacement vehicle to Available
-    updateVehicle(rd.replacement_vehicle_id, { status: 'Available' });
-
-    addAuditLog('redeployment', redeploymentId, 'RELEASE_REPLACEMENT', {
-      replacement_vehicle: rd.replacement_vehicle_id,
-    });
+    if (!error) {
+      setRedeployments((prev) =>
+        prev.map((r) => (r.id === redeploymentId ? { ...r, status: 'Released', release_date: nowIso } : r))
+      );
+      await updateVehicle(rd.replacement_vehicle_id, { status: 'Available' });
+      await addAuditLog('redeployment', redeploymentId, 'RELEASE_REPLACEMENT', {
+        replacement_vehicle: rd.replacement_vehicle_id,
+      });
+    }
   };
 
-  const addPart = (partData: Omit<Part, 'id' | 'created_at'>) => {
+  const addPart = async (partData: Omit<Part, 'id' | 'created_at'>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
     const newId = `prt-${Date.now()}`;
-    const newPart: Part = {
+    const newPart = {
       ...partData,
       id: newId,
-      created_at: new Date().toISOString(),
     };
-    setParts((prev) => [newPart, ...prev]);
-    addAuditLog('part', newId, 'CREATE_PART', { name: newPart.part_name, number: newPart.part_number });
+    
+    const { data, error } = await supabase.from('parts').insert([newPart]).select().single();
+    if (!error && data) {
+      setParts((prev) => [data as Part, ...prev]);
+      await addAuditLog('part', newId, 'CREATE_PART', { name: newPart.part_name, number: newPart.part_number });
+    }
   };
 
-  const adjustPartStock = (
+  const adjustPartStock = async (
     partId: string,
     quantityDelta: number,
     transactionType: 'purchase' | 'issue' | 'return' | 'adjustment',
     remarks: string
   ) => {
-    setParts((prev) =>
-      prev.map((p) => {
-        if (p.id !== partId) return p;
-        const newStock = Math.max(0, p.current_stock + quantityDelta);
-        return { ...p, current_stock: newStock };
-      })
-    );
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+    
+    const p = parts.find(pt => pt.id === partId);
+    if (!p) return;
+    
+    const newStock = Math.max(0, p.current_stock + quantityDelta);
+    const { error } = await supabase.from('parts').update({ current_stock: newStock }).eq('id', partId);
 
-    addAuditLog('part', partId, 'STOCK_ADJUSTMENT', {
-      transaction_type: transactionType,
-      delta: quantityDelta,
-      remarks,
-    });
+    if (!error) {
+      setParts((prev) => prev.map((pt) => pt.id === partId ? { ...pt, current_stock: newStock } : pt));
+      
+      const newTxn = {
+        id: `TXN-${Date.now()}`,
+        part_id: partId,
+        transaction_type: transactionType,
+        quantity: quantityDelta,
+        remarks,
+        performed_by: currentUser.id,
+      };
+      await supabase.from('inventory_transactions').insert([newTxn]);
+
+      await addAuditLog('part', partId, 'STOCK_ADJUSTMENT', {
+        transaction_type: transactionType,
+        delta: quantityDelta,
+        remarks,
+      });
+    }
   };
 
-  const addMaintenanceSchedule = (scheduleData: Omit<MaintenanceSchedule, 'id' | 'created_at'>) => {
+  const addMaintenanceSchedule = async (scheduleData: Omit<MaintenanceSchedule, 'id' | 'created_at'>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
     const newId = `ms-${Date.now()}`;
-    const newSchedule: MaintenanceSchedule = {
+    const newSchedule = {
       ...scheduleData,
       id: newId,
-      created_at: new Date().toISOString(),
     };
-    setMaintenanceSchedules((prev) => [newSchedule, ...prev]);
-    addAuditLog('maintenance', newId, 'SCHEDULE_MAINTENANCE', {
-      vehicle: scheduleData.vehicle_id,
-      title: scheduleData.title,
-    });
+    
+    const { data, error } = await supabase.from('maintenance_schedules').insert([newSchedule]).select().single();
+    if (!error && data) {
+      setMaintenanceSchedules((prev) => [data as MaintenanceSchedule, ...prev]);
+      await addAuditLog('maintenance', newId, 'SCHEDULE_MAINTENANCE', {
+        vehicle: scheduleData.vehicle_id,
+        title: scheduleData.title,
+      });
+    }
   };
 
-  const completeMaintenance = (scheduleId: string) => {
+  const completeMaintenance = async (scheduleId: string) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
     const nowIso = new Date().toISOString().split('T')[0];
-    setMaintenanceSchedules((prev) =>
-      prev.map((m) => (m.id === scheduleId ? { ...m, status: 'Completed', completed_date: nowIso } : m))
-    );
-    addAuditLog('maintenance', scheduleId, 'COMPLETE_MAINTENANCE');
+    const { error } = await supabase.from('maintenance_schedules').update({ status: 'Completed', completed_date: nowIso }).eq('id', scheduleId);
+    
+    if (!error) {
+      setMaintenanceSchedules((prev) =>
+        prev.map((m) => (m.id === scheduleId ? { ...m, status: 'Completed', completed_date: nowIso } : m))
+      );
+      await addAuditLog('maintenance', scheduleId, 'COMPLETE_MAINTENANCE');
+    }
   };
 
-  const resetAllData = () => {
-    storage.resetToDefault();
-    setVehicles(storage.getVehicles());
-    setBreakdowns(storage.getBreakdowns());
-    setJobCards(storage.getJobCards());
-    setParts(storage.getParts());
-    setJobCardParts(storage.getJobCardParts());
-    setRedeployments(storage.getRedeployments());
-    setMaintenanceSchedules(storage.getMaintenance());
-    setAuditLogs(storage.getAuditLogs());
+  const resetAllData = async () => {
+    // In live mode, we might not want this to do anything or drop all tables which is dangerous.
+    console.warn("Reset All Data called - unsupported in live Supabase mode via client side.");
   };
 
   return (
@@ -564,7 +696,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         users,
         kpi,
         targetAvailability,
-        isLoading: false,
+        isLoading,
         setTargetAvailability,
         addVehicle,
         updateVehicle,
@@ -583,6 +715,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addMaintenanceSchedule,
         completeMaintenance,
         resetAllData,
+        refreshData: fetchInitialData
       }}
     >
       {children}

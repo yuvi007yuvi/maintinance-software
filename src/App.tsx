@@ -6,7 +6,7 @@ import VehicleList from './components/vehicles/VehicleList';
 import BreakdownDesk from './components/breakdowns/BreakdownDesk';
 import JobCardKanban from './components/workshop/JobCardKanban';
 import ReportsHub from './components/reports/ReportsHub';
-import SupabaseModal from './components/layout/SupabaseModal';
+import { SupabaseModal } from './components/layout/SupabaseModal';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');

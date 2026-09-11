@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   Fuel,
 } from 'lucide-react';
-import { Vehicle } from '../../types';
+import type { Vehicle } from '../../types';
 import { useApp } from '../../context/AppContext';
 
 interface Vehicle360ModalProps {
