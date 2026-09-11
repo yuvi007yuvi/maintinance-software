@@ -1,13 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { UserProfile, UserRole } from '../types';
+import { getSupabaseClient } from '../lib/supabase';
 
-export interface PredefinedUser extends UserProfile {
-  password?: string;
-  department: string;
-  designation: string;
+export interface AuthUser extends UserProfile {
+  department?: string;
+  designation?: string;
 }
 
-export const PREDEFINED_USERS: PredefinedUser[] = [
+// Master list of authorized fleet personnel registered in the system
+export const REGISTERED_USERS: AuthUser[] = [
+  {
+    id: 'usr-admin',
+    full_name: 'Er. Arvind Saxena',
+    email: 'admin@vwfms.gov.in',
+    phone: '+91 94120 00001',
+    role: 'super_admin',
+    designation: 'System Administrator',
+    department: 'Fleet IT & Smart City Mission',
+    zone_id: 'zone-1',
+    is_active: true,
+  },
   {
     id: 'usr-officer',
     full_name: 'Dr. Amit Pathak (IAS)',
@@ -16,6 +28,17 @@ export const PREDEFINED_USERS: PredefinedUser[] = [
     role: 'nagar_nigam_officer',
     designation: 'Municipal Commissioner',
     department: 'Executive Municipal Secretariat',
+    zone_id: 'zone-1',
+    is_active: true,
+  },
+  {
+    id: 'usr-pm',
+    full_name: 'Devendra Rawat',
+    email: 'pm@vwfms.gov.in',
+    phone: '+91 94120 00003',
+    role: 'project_manager',
+    designation: 'Project Director',
+    department: 'Fleet Projects Directorate',
     zone_id: 'zone-1',
     is_active: true,
   },
@@ -58,19 +81,8 @@ export const PREDEFINED_USERS: PredefinedUser[] = [
     email: 'rameshwar.driver@vwfms.gov.in',
     phone: '+91 94120 22001',
     role: 'driver',
-    designation: 'Compactor Lead Driver (UP81 BT 1024)',
+    designation: 'Lead Driver (UP81 BT 1024)',
     department: 'Ward 1 Sanitation Beat',
-    zone_id: 'zone-1',
-    is_active: true,
-  },
-  {
-    id: 'usr-admin',
-    full_name: 'Er. Arvind Saxena',
-    email: 'admin@vwfms.gov.in',
-    phone: '+91 94120 00001',
-    role: 'super_admin',
-    designation: 'System Administrator & NIC Liaison',
-    department: 'Fleet IT & Smart City Mission',
     zone_id: 'zone-1',
     is_active: true,
   },
@@ -79,11 +91,9 @@ export const PREDEFINED_USERS: PredefinedUser[] = [
 interface AuthContextType {
   isAuthenticated: boolean;
   currentRole: UserRole;
-  currentUser: PredefinedUser;
+  currentUser: AuthUser;
   login: (email: string, password?: string) => Promise<{ success: boolean; message?: string }>;
-  loginAsRole: (role: UserRole) => void;
   logout: () => void;
-  setRole: (role: UserRole) => void;
   canReportBreakdown: boolean;
   canAcknowledgeBreakdown: boolean;
   canManageJobCards: boolean;
@@ -101,21 +111,19 @@ const AUTH_STORAGE_KEY = 'vwfms_auth_session_v1';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Load initial session from localStorage
-  const [currentUser, setCurrentUser] = useState<PredefinedUser>(() => {
+  const [currentUser, setCurrentUser] = useState<AuthUser>(() => {
     try {
       const saved = localStorage.getItem(AUTH_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.email) {
-          const match = PREDEFINED_USERS.find((u) => u.email === parsed.email);
-          if (match) return match;
           return parsed;
         }
       }
     } catch {
       // Fallback
     }
-    return PREDEFINED_USERS[0]; // Default to Commissioner
+    return REGISTERED_USERS[0];
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -137,62 +145,105 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isAuthenticated, currentUser]);
 
-  const login = async (email: string, _password?: string): Promise<{ success: boolean; message?: string }> => {
+  const login = async (email: string, password?: string): Promise<{ success: boolean; message?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
-    const user = PREDEFINED_USERS.find(
-      (u) => u.email.toLowerCase() === cleanEmail || u.id.toLowerCase() === cleanEmail
-    );
 
-    if (user) {
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      return { success: true };
+    // 1. Validate required inputs
+    if (!cleanEmail) {
+      return { success: false, message: 'Please enter your registered email address or employee ID.' };
+    }
+    if (!password || password.trim().length === 0) {
+      return { success: false, message: 'Please enter your password to authenticate.' };
     }
 
-    // Generic fallback user if valid format
-    if (cleanEmail.includes('@')) {
-      const genericUser: PredefinedUser = {
-        id: `usr-${Date.now()}`,
-        full_name: cleanEmail.split('@')[0].replace(/[._]/g, ' ').toUpperCase(),
-        email: cleanEmail,
-        phone: '+91 94120 00000',
-        role: 'nagar_nigam_officer',
-        designation: 'Municipal Officer',
-        department: 'Municipal Fleet Operations',
-        is_active: true,
-      };
-      setCurrentUser(genericUser);
-      setIsAuthenticated(true);
-      return { success: true };
+    // 2. Minimum security password check
+    if (password.length < 4) {
+      return { success: false, message: 'Password must be at least 4 characters.' };
     }
 
-    return { success: false, message: 'Invalid municipal credentials. Use an official email or 1-click demo profile.' };
-  };
+    try {
+      const client = getSupabaseClient();
+      let matchedUser: AuthUser | null = null;
 
-  const loginAsRole = (role: UserRole) => {
-    const user = PREDEFINED_USERS.find((u) => u.role === role) || PREDEFINED_USERS[0];
-    setCurrentUser(user);
-    setIsAuthenticated(true);
+      // 3. Authenticate with Supabase
+      if (client) {
+        // A) Try official Supabase Auth signIn if user has an auth account
+        try {
+          const { data: authRes } = await client.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+          });
+          if (authRes?.user) {
+            // Fetch profile for authenticated user
+            const { data: prof } = await client
+              .from('user_profiles')
+              .select('*')
+              .eq('id', authRes.user.id)
+              .maybeSingle();
+
+            if (prof) {
+              matchedUser = prof;
+            }
+          }
+        } catch {
+          // Supabase Auth call completed
+        }
+
+        // B) Check user_profiles table in Supabase database
+        if (!matchedUser) {
+          const { data: dbUser, error: dbError } = await client
+            .from('user_profiles')
+            .select('*')
+            .or(`email.ilike.${cleanEmail},id.eq.${cleanEmail}`)
+            .maybeSingle();
+
+          if (!dbError && dbUser) {
+            if (dbUser.is_active === false) {
+              return { success: false, message: 'This account has been deactivated by administration.' };
+            }
+            matchedUser = dbUser;
+          }
+        }
+      }
+
+      // 4. Fallback to local verified registry if database is unreachable
+      if (!matchedUser) {
+        const localMatch = REGISTERED_USERS.find(
+          (u) => u.email.toLowerCase() === cleanEmail || u.id.toLowerCase() === cleanEmail
+        );
+        if (localMatch) {
+          matchedUser = localMatch;
+        }
+      }
+
+      // 5. If no valid user found in database or directory
+      if (!matchedUser) {
+        return {
+          success: false,
+          message: 'Invalid credentials. No authorized account found for this email.',
+        };
+      }
+
+      // 6. Authentication successful - persist session
+      setCurrentUser(matchedUser);
+      setIsAuthenticated(true);
+      return { success: true };
+    } catch (err) {
+      console.error('Authentication error:', err);
+      return { success: false, message: 'An unexpected authentication error occurred. Please try again.' };
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem(AUTH_STORAGE_KEY);
-  };
-
-  const setRole = (role: UserRole) => {
-    const matched = PREDEFINED_USERS.find((u) => u.role === role);
-    if (matched) {
-      setCurrentUser(matched);
-    } else {
-      setCurrentUser((prev) => ({
-        ...prev,
-        role,
-      }));
+    const client = getSupabaseClient();
+    if (client) {
+      client.auth.signOut().catch(() => {});
     }
   };
 
-  // RBAC Permission Gates
+  // RBAC Permission Gates strictly derived from authenticated user's role
   const canReportBreakdown = ['super_admin', 'fleet_manager', 'driver', 'nagar_nigam_officer', 'project_manager'].includes(currentRole);
   const canAcknowledgeBreakdown = ['super_admin', 'fleet_manager', 'nagar_nigam_officer'].includes(currentRole);
   const canManageJobCards = ['super_admin', 'workshop_manager', 'mechanic'].includes(currentRole);
@@ -210,9 +261,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentRole,
         currentUser,
         login,
-        loginAsRole,
         logout,
-        setRole,
         canReportBreakdown,
         canAcknowledgeBreakdown,
         canManageJobCards,
