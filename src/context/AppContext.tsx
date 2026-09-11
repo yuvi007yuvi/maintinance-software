@@ -73,6 +73,13 @@ interface AppContextType {
   adjustPartStock: (partId: string, quantityDelta: number, transactionType: 'purchase' | 'issue' | 'return' | 'adjustment', remarks: string) => Promise<void>;
   addMaintenanceSchedule: (schedule: Omit<MaintenanceSchedule, 'id' | 'created_at'>) => Promise<void>;
   completeMaintenance: (scheduleId: string) => Promise<void>;
+  addUser: (userData: Omit<UserProfile, 'id'>) => Promise<{ success: boolean; message?: string }>;
+  updateUser: (id: string, updates: Partial<UserProfile>) => Promise<void>;
+  toggleUserStatus: (id: string, isActive: boolean) => Promise<void>;
+  addWorkshop: (data: Omit<Workshop, 'id'>) => Promise<void>;
+  updateWorkshop: (id: string, updates: Partial<Workshop>) => Promise<void>;
+  addZone: (data: Omit<Zone, 'id'>) => Promise<void>;
+  addWard: (data: Omit<Ward, 'id'>) => Promise<void>;
   resetAllData: () => Promise<void>;
   refreshData: () => Promise<void>;
 }
@@ -697,6 +704,98 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const addUser = async (userData: Omit<UserProfile, 'id'>): Promise<{ success: boolean; message?: string }> => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return { success: false, message: 'Database client not connected' };
+
+    const newId = `usr-${Date.now()}`;
+    const newUser: UserProfile = {
+      ...userData,
+      id: newId,
+    };
+
+    const { data, error } = await supabase.from('user_profiles').insert([newUser]).select().single();
+    if (error) {
+      return { success: false, message: error.message };
+    }
+
+    if (data) {
+      setUsers((prev) => [...prev, data as UserProfile]);
+      await addAuditLog('user', newId, 'CREATE_USER', {
+        name: userData.full_name,
+        email: userData.email,
+        role: userData.role,
+      });
+      return { success: true };
+    }
+    return { success: false, message: 'Failed to create user account' };
+  };
+
+  const updateUser = async (id: string, updates: Partial<UserProfile>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const { error } = await supabase.from('user_profiles').update(updates).eq('id', id);
+    if (!error) {
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...updates } : u)));
+      await addAuditLog('user', id, 'UPDATE_USER', updates);
+    }
+  };
+
+  const toggleUserStatus = async (id: string, isActive: boolean) => {
+    await updateUser(id, { is_active: isActive });
+  };
+
+  const addWorkshop = async (data: Omit<Workshop, 'id'>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const newId = `ws-${Date.now()}`;
+    const newWs: Workshop = { ...data, id: newId };
+    const { data: res, error } = await supabase.from('workshops').insert([newWs]).select().single();
+    if (!error && res) {
+      setWorkshops((prev) => [...prev, res as Workshop]);
+      await addAuditLog('workshop' as any, newId, 'CREATE_WORKSHOP', { name: data.name, capacity: data.capacity });
+    }
+  };
+
+  const updateWorkshop = async (id: string, updates: Partial<Workshop>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const { error } = await supabase.from('workshops').update(updates).eq('id', id);
+    if (!error) {
+      setWorkshops((prev) => prev.map((w) => (w.id === id ? { ...w, ...updates } : w)));
+      await addAuditLog('workshop' as any, id, 'UPDATE_WORKSHOP', updates);
+    }
+  };
+
+  const addZone = async (data: Omit<Zone, 'id'>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const newId = `zone-${Date.now()}`;
+    const newZone: Zone = { ...data, id: newId };
+    const { data: res, error } = await supabase.from('zones').insert([newZone]).select().single();
+    if (!error && res) {
+      setZones((prev) => [...prev, res as Zone]);
+      await addAuditLog('zone' as any, newId, 'CREATE_ZONE', { name: data.name, code: data.code });
+    }
+  };
+
+  const addWard = async (data: Omit<Ward, 'id'>) => {
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const newId = `ward-${Date.now()}`;
+    const newWard: Ward = { ...data, id: newId };
+    const { data: res, error } = await supabase.from('wards').insert([newWard]).select().single();
+    if (!error && res) {
+      setWards((prev) => [...prev, res as Ward]);
+      await addAuditLog('ward' as any, newId, 'CREATE_WARD', { name: data.name, ward_number: data.ward_number });
+    }
+  };
+
   const resetAllData = async () => {
     // In live mode, we might not want this to do anything or drop all tables which is dangerous.
     console.warn("Reset All Data called - unsupported in live Supabase mode via client side.");
@@ -737,6 +836,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adjustPartStock,
         addMaintenanceSchedule,
         completeMaintenance,
+        addUser,
+        updateUser,
+        toggleUserStatus,
+        addWorkshop,
+        updateWorkshop,
+        addZone,
+        addWard,
         resetAllData,
         refreshData: fetchInitialData
       }}

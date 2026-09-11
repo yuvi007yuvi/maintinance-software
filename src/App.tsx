@@ -13,6 +13,7 @@ import MaintenanceCompliance from './components/maintenance/MaintenanceComplianc
 import RedeploymentDesk from './components/redeployment/RedeploymentDesk';
 import AuditTrailHub from './components/audit/AuditTrailHub';
 import DatabaseStatusHub from './components/database/DatabaseStatusHub';
+import { AdminHub } from './components/admin/AdminHub';
 import { SupabaseModal } from './components/layout/SupabaseModal';
 
 function AppContent() {
@@ -46,6 +47,8 @@ function AppContent() {
         return <AuditTrailHub />;
       case 'database':
         return <DatabaseStatusHub onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)} />;
+      case 'admin':
+        return <AdminHub onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)} />;
       default:
         return <Dashboard onNavigate={setActiveTab} onOpenReportBreakdown={() => setActiveTab('breakdowns')} />;
     }

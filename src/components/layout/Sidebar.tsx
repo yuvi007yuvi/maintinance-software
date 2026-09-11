@@ -18,6 +18,7 @@ import {
   PanelLeftOpen,
   Activity,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -46,7 +47,7 @@ interface NavGroup {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const { kpi, breakdowns, jobCards, redeployments, auditLogs } = useApp();
-  const { currentRole, currentUser, logout } = useAuth();
+  const { currentRole, currentUser, logout, canManageSettings } = useAuth();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,9 +174,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
           badge: 'Live',
           badgeType: 'success',
         },
+        ...(canManageSettings
+          ? [
+              {
+                id: 'admin',
+                label: 'Admin & User Control',
+                hindiLabel: 'प्रशासक नियंत्रण',
+                icon: ShieldCheck,
+                badge: 'Admin',
+                badgeType: 'info' as const,
+              },
+            ]
+          : []),
       ],
     },
-  ], [kpi, activeBreakdownsCount, activeJobsCount, activeRedeploymentsCount, auditLogs.length]);
+  ], [kpi, activeBreakdownsCount, activeJobsCount, activeRedeploymentsCount, auditLogs.length, canManageSettings]);
 
   // Search filtering
   const filteredGroups = useMemo(() => {
