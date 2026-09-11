@@ -1,31 +1,103 @@
+import { useMemo, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { FileText, Download, BarChart2, TrendingUp, Filter, Printer } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export default function ReportsHub() {
-  const { kpi, isLoading } = useApp();
+  const { kpi, vehicles, breakdowns, jobCards, isLoading } = useApp();
+  const [trendRange, setTrendRange] = useState<'6months' | 'year'>('6months');
 
-  // Mock data for charts
-  const downtimeTrendData = [
-    { name: 'Jan', downtime: 120, target: 80 },
-    { name: 'Feb', downtime: 145, target: 80 },
-    { name: 'Mar', downtime: 110, target: 80 },
-    { name: 'Apr', downtime: 95, target: 80 },
-    { name: 'May', downtime: 105, target: 80 },
-    { name: 'Jun', downtime: 85, target: 80 },
-    { name: 'Jul', downtime: 75, target: 80 },
-  ];
+  // Dynamically compute monthly downtime trends from live breakdowns
+  const downtimeTrendData = useMemo(() => {
+    const monthsCount = trendRange === 'year' ? 12 : 6;
+    const now = new Date();
+    const months: { name: string; year: number; monthIndex: number; downtime: number; target: number }[] = [];
 
-  const repairCostData = [
-    { name: 'Heavy', cost: 45000 },
-    { name: 'Medium', cost: 28000 },
-    { name: 'Light', cost: 12000 },
-    { name: 'Special', cost: 35000 },
-  ];
+    for (let i = monthsCount - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        name: d.toLocaleDateString('en-US', { month: 'short' }),
+        year: d.getFullYear(),
+        monthIndex: d.getMonth(),
+        downtime: 0,
+        target: Math.max(40, Math.round((kpi.totalFleet || 10) * 8)),
+      });
+    }
+
+    breakdowns.forEach((bd) => {
+      const bdDate = new Date(bd.breakdown_date || bd.created_at);
+      if (isNaN(bdDate.getTime())) return;
+
+      const mIdx = months.findIndex(
+        (m) => m.year === bdDate.getFullYear() && m.monthIndex === bdDate.getMonth()
+      );
+      if (mIdx !== -1) {
+        const start = bdDate.getTime();
+        const end = bd.status === 'Completed' ? new Date(bd.updated_at || bdDate).getTime() : Date.now();
+        const hours = Math.max(1, Math.round((end - start) / (1000 * 60 * 60)));
+        months[mIdx].downtime += hours;
+      }
+    });
+
+    return months.map(({ name, downtime, target }) => ({
+      name,
+      downtime,
+      target,
+    }));
+  }, [breakdowns, kpi.totalFleet, trendRange]);
+
+  // Dynamically compute real repair costs aggregated by vehicle category
+  const repairCostData = useMemo(() => {
+    const categoryCostMap: Record<string, number> = {};
+
+    jobCards.forEach((jc) => {
+      const veh = vehicles.find((v) => v.id === jc.vehicle_id);
+      const category = veh?.category || 'General Fleet';
+      const cost = Number(jc.actual_cost || jc.estimated_cost || 0);
+      categoryCostMap[category] = (categoryCostMap[category] || 0) + cost;
+    });
+
+    // Ensure all active vehicle categories appear even if repair cost is 0
+    vehicles.forEach((v) => {
+      if (categoryCostMap[v.category] === undefined) {
+        categoryCostMap[v.category] = 0;
+      }
+    });
+
+    const list = Object.entries(categoryCostMap).map(([name, cost]) => ({
+      name,
+      cost: Math.round(cost),
+    }));
+
+    return list.sort((a, b) => b.cost - a.cost);
+  }, [jobCards, vehicles]);
 
   if (isLoading) {
     return <div className="p-8 text-center text-slate-400">Loading reports...</div>;
   }
+
+  const handleExportCSV = () => {
+    const headers = ['Registration Number', 'Vehicle Type', 'Category', 'Make', 'Model', 'Status', 'Zone', 'Ward'];
+    const rows = vehicles.map(v => [
+      v.registration_number,
+      v.vehicle_type,
+      v.category,
+      v.make,
+      v.model,
+      v.status,
+      v.assigned_zone_id,
+      v.assigned_ward_id
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.map(c => `"${c || ''}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `vwfms_fleet_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handlePrint = () => {
     window.print();
@@ -47,7 +119,10 @@ export default function ReportsHub() {
             <Printer className="w-4 h-4" />
             Print
           </button>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center gap-2">
+          <button 
+            onClick={handleExportCSV}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center gap-2"
+          >
             <Download className="w-4 h-4" />
             Export CSV
           </button>
@@ -81,9 +156,13 @@ export default function ReportsHub() {
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm print:bg-white print:border-slate-300">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 print:text-slate-900">Downtime Trends (Hours)</h2>
-            <select className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 text-sm text-slate-700 dark:text-slate-300 no-print">
-              <option>Last 6 Months</option>
-              <option>This Year</option>
+            <select 
+              value={trendRange}
+              onChange={(e) => setTrendRange(e.target.value as '6months' | 'year')}
+              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 text-sm text-slate-700 dark:text-slate-300 no-print"
+            >
+              <option value="6months">Last 6 Months</option>
+              <option value="year">Last 12 Months</option>
             </select>
           </div>
           <div className="h-72">

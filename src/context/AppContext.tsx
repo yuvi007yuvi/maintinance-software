@@ -180,8 +180,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       entity_name,
       entity_id,
       action,
-      performed_by: currentUser.full_name,
-      performed_by_role: currentUser.role,
+      performed_by: currentUser?.full_name || 'System User',
+      performed_by_role: currentUser?.role || 'super_admin',
       details,
     };
 
@@ -348,7 +348,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const nowIso = new Date().toISOString();
     const updates = {
       status: 'Acknowledged',
-      acknowledged_by: currentUser.id,
+      acknowledged_by: currentUser?.id || 'system',
       acknowledged_at: nowIso,
     };
 
@@ -357,7 +357,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setBreakdowns((prev) =>
         prev.map((b) => (b.id === breakdownId ? { ...b, ...updates } as Breakdown : b))
       );
-      await addAuditLog('breakdown', breakdownId, 'ACKNOWLEDGE_BREAKDOWN', { acknowledged_by: currentUser.full_name });
+      await addAuditLog('breakdown', breakdownId, 'ACKNOWLEDGE_BREAKDOWN', { acknowledged_by: currentUser?.full_name || 'System User' });
     }
   };
 
@@ -501,7 +501,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       part_id: partId,
       quantity,
       unit_price: part.purchase_price,
-      issued_by: currentUser.id,
+      issued_by: currentUser?.id || 'system',
     };
 
     const { data, error } = await supabase.from('job_card_parts').insert([newJcp]).select().single();
@@ -530,7 +530,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updates: Partial<JobCard> = {
       status: 'Closed',
       inspection_status: 'Passed',
-      approved_by: currentUser.id,
+      approved_by: currentUser?.id || 'system',
       approved_at: nowIso,
       closed_at: nowIso,
       remarks: remarks || jc.remarks || 'Work verified and approved for redeployment.',
@@ -544,7 +544,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     await addAuditLog('job_card', jobCardId, 'APPROVE_AND_CLOSE', {
-      approved_by: currentUser.full_name,
+      approved_by: currentUser?.full_name || 'System User',
       remarks,
     });
   };
@@ -566,7 +566,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...data,
       id: newId,
       status: 'Active',
-      approved_by: currentUser.id,
+      approved_by: currentUser?.id || 'system',
     };
 
     const { data: insertedData, error } = await supabase.from('redeployments').insert([newRedeployment]).select().single();
@@ -650,7 +650,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         transaction_type: transactionType,
         quantity: quantityDelta,
         remarks,
-        performed_by: currentUser.id,
+        performed_by: currentUser?.id || 'system',
       };
       await supabase.from('inventory_transactions').insert([newTxn]);
 

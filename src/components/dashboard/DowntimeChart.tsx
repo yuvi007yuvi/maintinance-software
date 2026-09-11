@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -14,18 +14,53 @@ import {
 import { useApp } from '../../context/AppContext';
 
 export const DowntimeChart: React.FC = () => {
-  const { kpi } = useApp();
+  const { kpi, vehicles, breakdowns } = useApp();
 
-  // 7-day Availability trend
-  const availabilityTrendData = [
-    { day: '05 Sep', availability: 78, target: 85, downtime: 46 },
-    { day: '06 Sep', availability: 80, target: 85, downtime: 42 },
-    { day: '07 Sep', availability: 76, target: 85, downtime: 52 },
-    { day: '08 Sep', availability: 74, target: 85, downtime: 58 },
-    { day: '09 Sep', availability: 72, target: 85, downtime: 64 },
-    { day: '10 Sep', availability: 70, target: 85, downtime: 68 },
-    { day: '11 Sep (Today)', availability: kpi.availabilityPercentage, target: kpi.targetAvailabilityPercentage, downtime: kpi.totalDowntimeHours },
-  ];
+  // 7-day dynamic availability trend calculated from actual breakdowns & fleet count
+  const availabilityTrendData = useMemo(() => {
+    const days: { day: string; availability: number; target: number; downtime: number }[] = [];
+    const now = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const isToday = i === 0;
+      const dayLabel = isToday
+        ? `${d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' })} (Today)`
+        : d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+
+      if (isToday) {
+        days.push({
+          day: dayLabel,
+          availability: kpi.availabilityPercentage,
+          target: kpi.targetAvailabilityPercentage,
+          downtime: kpi.totalDowntimeHours,
+        });
+      } else {
+        const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).getTime();
+        const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).getTime();
+
+        const activeOnDay = breakdowns.filter((b) => {
+          const bStart = new Date(b.breakdown_date || b.created_at).getTime();
+          const bEnd = b.status === 'Completed' ? new Date(b.updated_at || b.created_at).getTime() : Date.now();
+          return bStart <= endOfDay && bEnd >= startOfDay;
+        });
+
+        const activeCount = activeOnDay.length;
+        const total = kpi.totalFleet || vehicles.length || 1;
+        const availPct = Math.max(0, Math.min(100, Math.round(((total - activeCount) / total) * 100)));
+        const dayDowntime = activeCount * 8;
+
+        days.push({
+          day: dayLabel,
+          availability: availPct,
+          target: kpi.targetAvailabilityPercentage,
+          downtime: dayDowntime,
+        });
+      }
+    }
+
+    return days;
+  }, [kpi, breakdowns, vehicles]);
 
   // Status distribution
   const statusData = [

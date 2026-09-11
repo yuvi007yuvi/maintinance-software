@@ -114,6 +114,8 @@ export interface Breakdown {
   acknowledged_at?: string;
   collected_at?: string;
   workshop_received_at?: string;
+  completed_at?: string;
+  updated_at?: string;
   created_at: string;
 }
 

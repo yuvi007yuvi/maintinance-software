@@ -411,12 +411,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
             {/* Officer Profile Badge */}
             <div className="flex items-center gap-2.5 px-1 pt-0.5">
               <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                {currentUser.full_name.charAt(0)}
+                {currentUser?.full_name ? currentUser.full_name.charAt(0) : 'U'}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                    {currentUser.full_name}
+                    {currentUser?.full_name || 'Fleet Officer'}
                   </p>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Online" />
                 </div>
@@ -426,7 +426,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
               </div>
               <button
                 onClick={logout}
-                className="p-1 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                className="p-1 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                 title="Log out of session"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -438,9 +438,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
           <div className="flex flex-col items-center gap-2">
             <div
               className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer"
-              title={`${currentUser.full_name} (${currentRole.replace(/_/g, ' ')})`}
+              title={`${currentUser?.full_name || 'Fleet Officer'} (${currentRole.replace(/_/g, ' ')})`}
             >
-              {currentUser.full_name.charAt(0)}
+              {currentUser?.full_name ? currentUser.full_name.charAt(0) : 'U'}
             </div>
           </div>
         )}

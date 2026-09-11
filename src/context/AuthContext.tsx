@@ -91,7 +91,7 @@ export const REGISTERED_USERS: AuthUser[] = [
 interface AuthContextType {
   isAuthenticated: boolean;
   currentRole: UserRole;
-  currentUser: AuthUser;
+  currentUser: AuthUser | null;
   login: (email: string, password?: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   canReportBreakdown: boolean;
@@ -111,7 +111,7 @@ const AUTH_STORAGE_KEY = 'vwfms_auth_session_v1';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Load initial session from localStorage
-  const [currentUser, setCurrentUser] = useState<AuthUser>(() => {
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     try {
       const saved = localStorage.getItem(AUTH_STORAGE_KEY);
       if (saved) {
@@ -123,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // Fallback
     }
-    return REGISTERED_USERS[0];
+    return null;
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -134,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  const currentRole = currentUser.role;
+  const currentRole: UserRole = currentUser?.role || 'driver';
 
   // Persist session changes
   useEffect(() => {
@@ -236,6 +236,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
     localStorage.removeItem(AUTH_STORAGE_KEY);
     const client = getSupabaseClient();
     if (client) {
