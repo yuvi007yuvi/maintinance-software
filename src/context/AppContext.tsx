@@ -108,23 +108,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLoading(true);
     try {
       const [
-        { data: vehiclesData },
-        { data: breakdownsData },
-        { data: jobCardsData },
-        { data: partsData },
-        { data: jobCardPartsData },
-        { data: redeploymentsData },
-        { data: maintenanceData },
-        { data: workshopsData },
-        { data: wardsData },
-        { data: zonesData },
-        { data: usersData }
+        vRes, bRes, jcRes, pRes, jcpRes, rdRes, mRes, wRes, wdRes, zRes, uRes
       ] = await Promise.all([
         supabase.from('vehicles').select('*').order('created_at', { ascending: false }),
         supabase.from('breakdowns').select('*').order('created_at', { ascending: false }),
         supabase.from('job_cards').select('*').order('created_at', { ascending: false }),
         supabase.from('parts').select('*').order('created_at', { ascending: false }),
-        supabase.from('job_card_parts').select('*').order('created_at', { ascending: false }),
+        supabase.from('job_card_parts').select('*').order('issued_at', { ascending: false }),
         supabase.from('redeployments').select('*').order('created_at', { ascending: false }),
         supabase.from('maintenance_schedules').select('*').order('created_at', { ascending: false }),
         supabase.from('workshops').select('*'),
@@ -133,17 +123,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         supabase.from('user_profiles').select('*')
       ]);
 
-      if (vehiclesData) setVehicles(vehiclesData as Vehicle[]);
-      if (breakdownsData) setBreakdowns(breakdownsData as Breakdown[]);
-      if (jobCardsData) setJobCards(jobCardsData as JobCard[]);
-      if (partsData) setParts(partsData as Part[]);
-      if (jobCardPartsData) setJobCardParts(jobCardPartsData as JobCardPart[]);
-      if (redeploymentsData) setRedeployments(redeploymentsData as Redeployment[]);
-      if (maintenanceData) setMaintenanceSchedules(maintenanceData as MaintenanceSchedule[]);
-      if (workshopsData) setWorkshops(workshopsData as Workshop[]);
-      if (wardsData) setWards(wardsData as Ward[]);
-      if (zonesData) setZones(zonesData as Zone[]);
-      if (usersData) setUsers(usersData as UserProfile[]);
+      if (vRes.error) console.warn('Supabase vehicles error:', vRes.error.message);
+      if (vRes.data) setVehicles(vRes.data as Vehicle[]);
+
+      if (bRes.error) console.warn('Supabase breakdowns error:', bRes.error.message);
+      if (bRes.data) setBreakdowns(bRes.data as Breakdown[]);
+
+      if (jcRes.error) console.warn('Supabase job_cards error:', jcRes.error.message);
+      if (jcRes.data) setJobCards(jcRes.data as JobCard[]);
+
+      if (pRes.error) console.warn('Supabase parts error:', pRes.error.message);
+      if (pRes.data) setParts(pRes.data as Part[]);
+
+      if (jcpRes.error) console.warn('Supabase job_card_parts error:', jcpRes.error.message);
+      if (jcpRes.data) setJobCardParts(jcpRes.data as JobCardPart[]);
+
+      if (rdRes.error) console.warn('Supabase redeployments error:', rdRes.error.message);
+      if (rdRes.data) setRedeployments(rdRes.data as Redeployment[]);
+
+      if (mRes.error) console.warn('Supabase maintenance_schedules error:', mRes.error.message);
+      if (mRes.data) setMaintenanceSchedules(mRes.data as MaintenanceSchedule[]);
+
+      if (wRes.error) console.warn('Supabase workshops error:', wRes.error.message);
+      if (wRes.data) setWorkshops(wRes.data as Workshop[]);
+
+      if (wdRes.error) console.warn('Supabase wards error:', wdRes.error.message);
+      if (wdRes.data) setWards(wdRes.data as Ward[]);
+
+      if (zRes.error) console.warn('Supabase zones error:', zRes.error.message);
+      if (zRes.data) setZones(zRes.data as Zone[]);
+
+      if (uRes.error) console.warn('Supabase user_profiles error:', uRes.error.message);
+      if (uRes.data) setUsers(uRes.data as UserProfile[]);
     } catch (error) {
       console.error('Error fetching data from Supabase:', error);
     } finally {
@@ -247,6 +258,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newVehicle = {
       ...vehicleData,
       id: newId,
+      assigned_zone_id: vehicleData.assigned_zone_id || null,
+      assigned_ward_id: vehicleData.assigned_ward_id || null,
+      assigned_driver_id: vehicleData.assigned_driver_id || null,
+      workshop_id: vehicleData.workshop_id || null,
     };
     
     const { data, error } = await supabase.from('vehicles').insert([newVehicle]).select().single();
@@ -264,7 +279,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const supabase = getSupabaseClient();
     if (!supabase) return;
 
-    const { error } = await supabase.from('vehicles').update(updates).eq('id', id);
+    const cleanedUpdates = { ...updates };
+    if ('assigned_zone_id' in cleanedUpdates && !cleanedUpdates.assigned_zone_id) cleanedUpdates.assigned_zone_id = undefined;
+    if ('assigned_ward_id' in cleanedUpdates && !cleanedUpdates.assigned_ward_id) cleanedUpdates.assigned_ward_id = undefined;
+    if ('assigned_driver_id' in cleanedUpdates && !cleanedUpdates.assigned_driver_id) cleanedUpdates.assigned_driver_id = undefined;
+    if ('workshop_id' in cleanedUpdates && !cleanedUpdates.workshop_id) cleanedUpdates.workshop_id = undefined;
+
+    const { error } = await supabase.from('vehicles').update(cleanedUpdates).eq('id', id);
     
     if (!error) {
       setVehicles((prev) =>
@@ -299,6 +320,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: newId,
       breakdown_number: breakdownNumber,
       status: 'Reported',
+      driver_id: data.driver_id || null,
+      ward_id: data.ward_id || null,
     };
 
     const { data: insertedData, error } = await supabase.from('breakdowns').insert([newBreakdown]).select().single();

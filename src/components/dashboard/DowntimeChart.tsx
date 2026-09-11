@@ -2,8 +2,6 @@ import React from 'react';
 import {
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -12,12 +10,11 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
 } from 'recharts';
 import { useApp } from '../../context/AppContext';
 
 export const DowntimeChart: React.FC = () => {
-  const { kpi, vehicles, breakdowns } = useApp();
+  const { kpi } = useApp();
 
   // 7-day Availability trend
   const availabilityTrendData = [
@@ -40,27 +37,16 @@ export const DowntimeChart: React.FC = () => {
     { name: 'Ready for Field', value: kpi.readyForDeploymentVehicles, color: '#14b8a6' },
   ].filter((item) => item.value > 0);
 
-  // Downtime cause breakdown
-  const categoryCount: Record<string, number> = {};
-  breakdowns.forEach((b) => {
-    categoryCount[b.problem_category] = (categoryCount[b.problem_category] || 0) + 1;
-  });
-
-  const causeData = Object.entries(categoryCount).map(([category, count]) => ({
-    category,
-    count,
-  }));
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       {/* 7-Day Trend Chart */}
-      <div className="lg:col-span-2 p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+      <div className="lg:col-span-2 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
-            <h3 className="font-heading font-bold text-sm text-white">
+            <h3 className="font-heading font-bold text-sm text-slate-900 dark:text-white">
               Fleet Availability % vs Downtime Trend
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Monitoring daily fleet uptime towards {kpi.targetAvailabilityPercentage}% target
             </p>
           </div>
@@ -68,11 +54,11 @@ export const DowntimeChart: React.FC = () => {
           <div className="flex items-center gap-3 text-xs">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <span className="text-slate-300">Availability %</span>
+              <span className="text-slate-600 dark:text-slate-300 font-medium">Availability %</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-              <span className="text-slate-300">Target (85%)</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <span className="text-slate-600 dark:text-slate-300 font-medium">Target ({kpi.targetAvailabilityPercentage}%)</span>
             </div>
           </div>
         </div>
@@ -121,12 +107,12 @@ export const DowntimeChart: React.FC = () => {
       </div>
 
       {/* Fleet Status Donut Chart */}
-      <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col">
+      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
         <div className="mb-2">
-          <h3 className="font-heading font-bold text-sm text-white">
+          <h3 className="font-heading font-bold text-sm text-slate-900 dark:text-white">
             Current Fleet Distribution
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Real-time status breakdown ({kpi.totalFleet} vehicles)
           </p>
         </div>
@@ -149,10 +135,12 @@ export const DowntimeChart: React.FC = () => {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#0f172a',
-                  borderColor: '#334155',
+                  backgroundColor: '#ffffff',
+                  borderColor: '#e2e8f0',
                   borderRadius: '0.75rem',
                   fontSize: '12px',
+                  color: '#0f172a',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
               />
             </PieChart>
@@ -160,12 +148,12 @@ export const DowntimeChart: React.FC = () => {
         </div>
 
         {/* Legend pills */}
-        <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-800 text-[11px]">
+        <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px]">
           {statusData.map((item) => (
             <div key={item.name} className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-              <span className="text-slate-400 truncate">{item.name}:</span>
-              <span className="font-bold text-white ml-auto">{item.value}</span>
+              <span className="text-slate-600 dark:text-slate-400 truncate">{item.name}:</span>
+              <span className="font-bold text-slate-900 dark:text-white ml-auto">{item.value}</span>
             </div>
           ))}
         </div>

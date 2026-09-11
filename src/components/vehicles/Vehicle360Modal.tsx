@@ -2,18 +2,7 @@ import React, { useState } from 'react';
 import {
   X,
   Truck,
-  User,
-  MapPin,
-  Calendar,
-  Wrench,
-  AlertTriangle,
-  FileText,
-  Clock,
   CheckCircle2,
-  AlertCircle,
-  Package,
-  IndianRupee,
-  ShieldCheck,
   Fuel,
 } from 'lucide-react';
 import type { Vehicle } from '../../types';
@@ -87,37 +76,37 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95">
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 flex items-start justify-between">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-bold text-white shadow-lg">
+            <div className="h-12 w-12 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow-sm">
               <Truck className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-heading font-extrabold text-xl text-white tracking-wide">
+                <h2 className="font-heading font-extrabold text-xl text-slate-900 dark:text-white tracking-wide">
                   {vehicle.registration_number}
                 </h2>
                 <span
                   className={`text-xs px-2.5 py-0.5 rounded-full font-bold border ${
                     vehicle.status === 'Available' || vehicle.status === 'Ready for Deployment'
-                      ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30'
                       : vehicle.status === 'Deployed' || vehicle.status === 'Running'
-                      ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30'
+                      ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30'
                       : vehicle.status === 'Breakdown'
-                      ? 'bg-rose-500/10 text-rose-300 border-rose-500/30 animate-pulse'
-                      : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                      ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30 animate-pulse'
+                      : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30'
                   }`}
                 >
                   {vehicle.status}
                 </span>
-                <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+                <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-md font-medium border border-slate-200 dark:border-transparent">
                   {vehicle.category}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {vehicle.make} {vehicle.model} ({vehicle.manufacturing_year}) • {vehicle.vehicle_type}
               </p>
             </div>
@@ -125,34 +114,34 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Quick KPI Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-800 bg-slate-950/40 divide-x divide-slate-800 text-xs">
-          <div className="p-3 text-center">
-            <span className="text-slate-400 block text-[11px]">Breakdown Incidents</span>
-            <span className="font-bold text-white text-base font-mono">{vehicleBreakdowns.length}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 divide-x divide-slate-200 dark:divide-slate-800 text-xs">
+          <div className="p-3.5 text-center">
+            <span className="text-slate-500 dark:text-slate-400 block text-[11px]">Breakdown Incidents</span>
+            <span className="font-bold text-slate-900 dark:text-white text-base font-mono">{vehicleBreakdowns.length}</span>
           </div>
-          <div className="p-3 text-center">
-            <span className="text-slate-400 block text-[11px]">Job Cards Generated</span>
-            <span className="font-bold text-white text-base font-mono">{vehicleJobCards.length}</span>
+          <div className="p-3.5 text-center">
+            <span className="text-slate-500 dark:text-slate-400 block text-[11px]">Job Cards Generated</span>
+            <span className="font-bold text-slate-900 dark:text-white text-base font-mono">{vehicleJobCards.length}</span>
           </div>
-          <div className="p-3 text-center">
-            <span className="text-slate-400 block text-[11px]">Cumulative Downtime</span>
-            <span className="font-bold text-amber-400 text-base font-mono">{cumulativeDowntime} hrs</span>
+          <div className="p-3.5 text-center">
+            <span className="text-slate-500 dark:text-slate-400 block text-[11px]">Cumulative Downtime</span>
+            <span className="font-bold text-amber-600 dark:text-amber-400 text-base font-mono">{cumulativeDowntime} hrs</span>
           </div>
-          <div className="p-3 text-center">
-            <span className="text-slate-400 block text-[11px]">Total Spares Cost</span>
-            <span className="font-bold text-emerald-400 text-base font-mono">₹{totalPartsCost.toLocaleString('en-IN')}</span>
+          <div className="p-3.5 text-center">
+            <span className="text-slate-500 dark:text-slate-400 block text-[11px]">Total Spares Cost</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-base font-mono">₹{totalPartsCost.toLocaleString('en-IN')}</span>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 px-5 bg-slate-950/20">
+        <div className="flex border-b border-slate-200 dark:border-slate-800 px-5 bg-white dark:bg-slate-950/20">
           {[
             { id: 'overview', label: '360° Overview' },
             { id: 'breakdowns', label: `Breakdowns (${vehicleBreakdowns.length})` },
@@ -165,8 +154,8 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
               onClick={() => setActiveTab(tab.id as any)}
               className={`py-3 px-3.5 text-xs font-semibold border-b-2 transition-all ${
                 activeTab === tab.id
-                  ? 'border-emerald-500 text-emerald-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-emerald-600 text-emerald-700 dark:border-emerald-500 dark:text-emerald-400'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               {tab.label}
@@ -180,95 +169,95 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
             <div className="space-y-5">
               {/* Active Standby Banner if applicable */}
               {activeRedeployment && (
-                <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-xs flex items-center justify-between">
+                <div className="p-3.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-500/30 text-xs flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
                     <div>
-                      <span className="font-bold text-white">Active Field Redeployment: </span>
-                      <span className="text-cyan-300">
+                      <span className="font-bold text-slate-900 dark:text-white">Active Field Redeployment: </span>
+                      <span className="text-cyan-700 dark:text-cyan-300">
                         {activeRedeployment.original_vehicle_id === vehicle.id
                           ? `Standby Vehicle active in Ward ${activeRedeployment.ward_id.replace('ward-', '')}`
                           : `Currently deployed as Standby Replacement for original vehicle`}
                       </span>
                     </div>
                   </div>
-                  <span className="text-[11px] text-slate-400">{activeRedeployment.reason}</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">{activeRedeployment.reason}</span>
                 </div>
               )}
 
               {/* Master Specs Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Tech Specs */}
-                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2.5 text-xs">
-                  <h4 className="font-heading font-bold text-slate-300 text-xs uppercase tracking-wider mb-2">
+                <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2.5 text-xs shadow-xs">
+                  <h4 className="font-heading font-bold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider mb-2">
                     Vehicle Specifications
                   </h4>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Registration Number:</span>
-                    <span className="font-mono font-bold text-white">{vehicle.registration_number}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Registration Number:</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white">{vehicle.registration_number}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Vehicle Type:</span>
-                    <span className="text-white font-medium">{vehicle.vehicle_type}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Vehicle Type:</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{vehicle.vehicle_type}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Make & Model:</span>
-                    <span className="text-white">{vehicle.make} {vehicle.model}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Make & Model:</span>
+                    <span className="text-slate-900 dark:text-white">{vehicle.make} {vehicle.model}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Fuel Type:</span>
-                    <span className="text-white flex items-center gap-1">
-                      <Fuel className="w-3 h-3 text-cyan-400" /> {vehicle.fuel_type}
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Fuel Type:</span>
+                    <span className="text-slate-900 dark:text-white flex items-center gap-1 font-medium">
+                      <Fuel className="w-3 h-3 text-cyan-600 dark:text-cyan-400" /> {vehicle.fuel_type}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Payload / Capacity:</span>
-                    <span className="text-white">{vehicle.capacity}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Payload / Capacity:</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{vehicle.capacity}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Chassis Number:</span>
-                    <span className="font-mono text-slate-300">{vehicle.chassis_number}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Chassis Number:</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">{vehicle.chassis_number}</span>
                   </div>
                   <div className="flex justify-between py-1">
-                    <span className="text-slate-400">Engine Number:</span>
-                    <span className="font-mono text-slate-300">{vehicle.engine_number}</span>
+                    <span className="text-slate-500 dark:text-slate-400">Engine Number:</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">{vehicle.engine_number}</span>
                   </div>
                 </div>
 
                 {/* Operations & Location Assignment */}
-                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2.5 text-xs">
-                  <h4 className="font-heading font-bold text-slate-300 text-xs uppercase tracking-wider mb-2">
+                <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2.5 text-xs shadow-xs">
+                  <h4 className="font-heading font-bold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider mb-2">
                     Operations & Ward Allocation
                   </h4>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Assigned Zone:</span>
-                    <span className="text-emerald-400 font-semibold">{assignedZone?.name || 'Unassigned'}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Assigned Zone:</span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">{assignedZone?.name || 'Unassigned'}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Assigned Ward:</span>
-                    <span className="text-white font-medium">
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Assigned Ward:</span>
+                    <span className="text-slate-900 dark:text-white font-semibold">
                       Ward {assignedWard?.ward_number}: {assignedWard?.name || 'Unassigned'}
                     </span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Sanitation Inspector:</span>
-                    <span className="text-slate-300">{assignedWard?.sanitation_inspector || 'N/A'}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Sanitation Inspector:</span>
+                    <span className="text-slate-700 dark:text-slate-300">{assignedWard?.sanitation_inspector || 'N/A'}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Assigned Driver:</span>
-                    <span className="text-cyan-300 font-semibold">{assignedDriver?.full_name || 'Standby Driver Pool'}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Assigned Driver:</span>
+                    <span className="text-blue-700 dark:text-cyan-300 font-semibold">{assignedDriver?.full_name || 'Standby Driver Pool'}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Ownership:</span>
-                    <span className="text-white">{vehicle.ownership_type}</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Ownership:</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{vehicle.ownership_type}</span>
                   </div>
-                  <div className="flex justify-between py-1 border-b border-slate-800/80">
-                    <span className="text-slate-400">Current Odometer:</span>
-                    <span className="font-mono text-white">{vehicle.current_odometer_km.toLocaleString('en-IN')} KM</span>
+                  <div className="flex justify-between py-1 border-b border-slate-200/80 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-400">Current Odometer:</span>
+                    <span className="font-mono text-slate-900 dark:text-white font-semibold">{vehicle.current_odometer_km.toLocaleString('en-IN')} KM</span>
                   </div>
                   <div className="flex justify-between py-1">
-                    <span className="text-slate-400">Purchase Date:</span>
-                    <span className="text-slate-300">{vehicle.purchase_date}</span>
+                    <span className="text-slate-500 dark:text-slate-400">Purchase Date:</span>
+                    <span className="text-slate-700 dark:text-slate-300">{vehicle.purchase_date}</span>
                   </div>
                 </div>
               </div>
@@ -278,33 +267,33 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
           {activeTab === 'breakdowns' && (
             <div className="space-y-3">
               {vehicleBreakdowns.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 text-xs italic">
+                <div className="text-center py-8 text-slate-400 text-xs italic">
                   No breakdown incidents registered for this vehicle.
                 </div>
               ) : (
                 vehicleBreakdowns.map((b) => (
-                  <div key={b.id} className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+                  <div key={b.id} className="p-4 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs shadow-xs">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-rose-400">{b.breakdown_number}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                        <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{b.breakdown_number}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">
                           {b.problem_category}
                         </span>
                         <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                          b.severity === 'Critical' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'
+                          b.severity === 'Critical' ? 'bg-rose-50 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300' : 'bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300'
                         }`}>
                           {b.severity} Severity
                         </span>
                       </div>
-                      <span className="text-cyan-400 font-semibold">{b.status}</span>
+                      <span className="text-blue-600 dark:text-cyan-400 font-semibold">{b.status}</span>
                     </div>
 
-                    <p className="mt-2 text-slate-300">{b.problem_description}</p>
+                    <p className="mt-2 text-slate-700 dark:text-slate-300">{b.problem_description}</p>
 
-                    <div className="mt-2.5 pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between text-[11px] text-slate-400">
-                      <span>Location: <strong className="text-slate-200">{b.location}</strong></span>
-                      <span>Reported By: <strong className="text-slate-200">{b.reported_by}</strong></span>
-                      <span>Date: <strong className="text-slate-200">{new Date(b.breakdown_date).toLocaleString('en-IN')}</strong></span>
+                    <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                      <span>Location: <strong className="text-slate-800 dark:text-slate-200">{b.location}</strong></span>
+                      <span>Reported By: <strong className="text-slate-800 dark:text-slate-200">{b.reported_by}</strong></span>
+                      <span>Date: <strong className="text-slate-800 dark:text-slate-200">{new Date(b.breakdown_date).toLocaleString('en-IN')}</strong></span>
                     </div>
                   </div>
                 ))
@@ -315,25 +304,25 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
           {activeTab === 'workshop' && (
             <div className="space-y-3">
               {vehicleJobCards.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 text-xs italic">
+                <div className="text-center py-8 text-slate-400 text-xs italic">
                   No workshop job cards recorded for this vehicle.
                 </div>
               ) : (
                 vehicleJobCards.map((jc) => (
-                  <div key={jc.id} className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-xs space-y-2">
+                  <div key={jc.id} className="p-4 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs space-y-2 shadow-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-amber-400">{jc.job_card_number}</span>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-200">
+                      <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{jc.job_card_number}</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
                         Stage: {jc.status}
                       </span>
                     </div>
-                    <p className="text-slate-300"><strong>Complaint:</strong> {jc.complaint}</p>
-                    <p className="text-slate-400"><strong>Diagnosis:</strong> {jc.diagnosis || 'Diagnosis pending'}</p>
-                    <p className="text-slate-400"><strong>Required Work:</strong> {jc.required_repair || 'Pending'}</p>
+                    <p className="text-slate-700 dark:text-slate-300"><strong>Complaint:</strong> {jc.complaint}</p>
+                    <p className="text-slate-500 dark:text-slate-400"><strong>Diagnosis:</strong> {jc.diagnosis || 'Diagnosis pending'}</p>
+                    <p className="text-slate-500 dark:text-slate-400"><strong>Required Work:</strong> {jc.required_repair || 'Pending'}</p>
 
-                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Mechanic Assigned: <strong className="text-slate-200">{users.find(u => u.id === jc.assigned_mechanic_id)?.full_name || 'Unassigned'}</strong></span>
-                      <span>Actual Cost: <strong className="text-emerald-400">₹{jc.actual_cost.toLocaleString('en-IN')}</strong></span>
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                      <span>Mechanic Assigned: <strong className="text-slate-800 dark:text-slate-200">{users.find(u => u.id === jc.assigned_mechanic_id)?.full_name || 'Unassigned'}</strong></span>
+                      <span>Actual Cost: <strong className="text-emerald-600 dark:text-emerald-400">₹{jc.actual_cost.toLocaleString('en-IN')}</strong></span>
                     </div>
                   </div>
                 ))
@@ -344,13 +333,13 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
           {activeTab === 'parts' && (
             <div className="space-y-3">
               {vehiclePartsUsed.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 text-xs italic">
+                <div className="text-center py-8 text-slate-400 text-xs italic">
                   No spare parts logged for this vehicle repairs yet.
                 </div>
               ) : (
-                <div className="border border-slate-800 rounded-xl overflow-hidden">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-950 text-slate-400 border-b border-slate-800">
+                    <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-semibold">
                       <tr>
                         <th className="p-3">Part Name</th>
                         <th className="p-3">Part No.</th>
@@ -360,17 +349,17 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
                         <th className="p-3">Issued On</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {vehiclePartsUsed.map((p) => {
                         const partMeta = parts.find((pt) => pt.id === p.part_id);
                         return (
-                          <tr key={p.id} className="hover:bg-slate-800/30">
-                            <td className="p-3 font-semibold text-white">{partMeta?.part_name || p.part_id}</td>
-                            <td className="p-3 font-mono text-slate-400">{partMeta?.part_number || '-'}</td>
-                            <td className="p-3">{p.quantity} {partMeta?.unit}</td>
-                            <td className="p-3 font-mono">₹{p.unit_price}</td>
-                            <td className="p-3 font-mono font-bold text-emerald-400">₹{p.total_cost}</td>
-                            <td className="p-3 text-slate-400">{new Date(p.issued_at).toLocaleDateString('en-IN')}</td>
+                          <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                            <td className="p-3 font-semibold text-slate-900 dark:text-white">{partMeta?.part_name || p.part_id}</td>
+                            <td className="p-3 font-mono text-slate-500 dark:text-slate-400">{partMeta?.part_number || '-'}</td>
+                            <td className="p-3 text-slate-700 dark:text-slate-300">{p.quantity} {partMeta?.unit}</td>
+                            <td className="p-3 font-mono text-slate-700 dark:text-slate-300">₹{p.unit_price}</td>
+                            <td className="p-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">₹{p.total_cost}</td>
+                            <td className="p-3 text-slate-500 dark:text-slate-400">{new Date(p.issued_at).toLocaleDateString('en-IN')}</td>
                           </tr>
                         );
                       })}
@@ -383,47 +372,47 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
 
           {activeTab === 'documents' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+              <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-white">Fitness Certificate</span>
+                  <span className="font-bold text-slate-900 dark:text-white">Fitness Certificate</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${fitnessStatus.color}`}>
                     {fitnessStatus.label}
                   </span>
                 </div>
-                <p className="text-slate-400">Expiry Date: <strong className="text-slate-200">{vehicle.fitness_expiry}</strong></p>
+                <p className="text-slate-500 dark:text-slate-400">Expiry Date: <strong className="text-slate-800 dark:text-slate-200">{vehicle.fitness_expiry}</strong></p>
                 <p className="text-[11px] text-slate-400 mt-2">Required by RTO Aligarh for commercial municipal vehicles</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+              <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-white">Commercial Insurance</span>
+                  <span className="font-bold text-slate-900 dark:text-white">Commercial Insurance</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${insuranceStatus.color}`}>
                     {insuranceStatus.label}
                   </span>
                 </div>
-                <p className="text-slate-400">Expiry Date: <strong className="text-slate-200">{vehicle.insurance_expiry}</strong></p>
+                <p className="text-slate-500 dark:text-slate-400">Expiry Date: <strong className="text-slate-800 dark:text-slate-200">{vehicle.insurance_expiry}</strong></p>
                 <p className="text-[11px] text-slate-400 mt-2">Comprehensive municipal fleet policy</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+              <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-white">Pollution Under Control (PUC)</span>
+                  <span className="font-bold text-slate-900 dark:text-white">Pollution Under Control (PUC)</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${pucStatus.color}`}>
                     {pucStatus.label}
                   </span>
                 </div>
-                <p className="text-slate-400">Expiry Date: <strong className="text-slate-200">{vehicle.puc_expiry}</strong></p>
+                <p className="text-slate-500 dark:text-slate-400">Expiry Date: <strong className="text-slate-800 dark:text-slate-200">{vehicle.puc_expiry}</strong></p>
                 <p className="text-[11px] text-slate-400 mt-2">UP Pollution Control Board standard</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+              <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-white">Municipal Permit</span>
+                  <span className="font-bold text-slate-900 dark:text-white">Municipal Permit</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${permitStatus.color}`}>
                     {permitStatus.label}
                   </span>
                 </div>
-                <p className="text-slate-400">Expiry Date: <strong className="text-slate-200">{vehicle.permit_expiry}</strong></p>
+                <p className="text-slate-500 dark:text-slate-400">Expiry Date: <strong className="text-slate-800 dark:text-slate-200">{vehicle.permit_expiry}</strong></p>
                 <p className="text-[11px] text-slate-400 mt-2">Municipal route permit for sanitation operations</p>
               </div>
             </div>
@@ -431,9 +420,9 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
         </div>
 
         {/* Footer actions */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between">
-          <div className="text-xs text-slate-400">
-            Nagar Nigam Asset ID: <span className="font-mono text-slate-200 font-semibold">{vehicle.id}</span>
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 flex items-center justify-between">
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            Nagar Nigam Asset ID: <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">{vehicle.id}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -443,14 +432,14 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
                   onClose();
                   onOpenReportBreakdown(vehicle.id);
                 }}
-                className="px-3 py-1.5 text-xs font-bold text-rose-300 bg-rose-500/20 border border-rose-500/30 hover:bg-rose-500/30 rounded-lg transition-colors"
+                className="px-3.5 py-2 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 dark:text-rose-300 dark:bg-rose-500/20 dark:border-rose-500/30 rounded-lg transition-colors"
               >
                 Report Breakdown
               </button>
             )}
             <button
               onClick={onClose}
-              className="px-4 py-1.5 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg shadow-xs transition-colors"
             >
               Close
             </button>

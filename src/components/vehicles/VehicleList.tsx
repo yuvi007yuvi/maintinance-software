@@ -52,33 +52,33 @@ export default function VehicleList() {
       case 'Running':
       case 'Deployed':
       case 'Ready for Deployment':
-        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
       case 'Under Inspection':
       case 'Under Repair':
       case 'Awaiting Spare Parts':
-        return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20';
       case 'Breakdown':
       case 'Inactive':
       case 'Scrapped':
-        return 'bg-red-500/10 text-red-500 border-red-500/20';
-      default: return 'bg-slate-700 text-slate-300 border-slate-600';
+        return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20';
+      default: return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600';
     }
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-slate-400">Loading vehicles...</div>;
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading vehicles...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Fleet Master</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage and track all municipal vehicles</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Fleet Master</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage and track all municipal vehicles</p>
         </div>
         <button 
           onClick={() => setIsAddModalOpen(true)}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add Vehicle
@@ -86,7 +86,7 @@ export default function VehicleList() {
       </div>
 
       {/* Filters */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex flex-col md:flex-row gap-4">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex flex-col md:flex-row gap-4 shadow-sm">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input 
@@ -94,7 +94,7 @@ export default function VehicleList() {
             placeholder="Search by Registration No. or Type..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
           />
         </div>
         
@@ -103,7 +103,7 @@ export default function VehicleList() {
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors max-w-[150px]"
+            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors max-w-[150px]"
           >
             {statuses.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -111,7 +111,7 @@ export default function VehicleList() {
           <select 
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors max-w-[150px]"
+            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors max-w-[150px]"
           >
             {categories.map(d => <option key={String(d)} value={String(d)}>{String(d)}</option>)}
           </select>
@@ -124,40 +124,40 @@ export default function VehicleList() {
           <div 
             key={vehicle.id}
             onClick={() => setSelectedVehicleId(vehicle.id)}
-            className="bg-slate-800 border border-slate-700 rounded-xl p-5 hover:border-blue-500/50 transition-colors cursor-pointer group"
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group"
           >
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {vehicle.registration_number}
                 </h3>
-                <p className="text-sm text-slate-400">{vehicle.vehicle_type} • {vehicle.make}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{vehicle.vehicle_type} • {vehicle.make}</p>
               </div>
-              <div className={`px-2.5 py-1 rounded-full text-xs font-medium border flex items-center gap-1.5 whitespace-nowrap ${getStatusColor(vehicle.status)}`}>
+              <div className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 whitespace-nowrap ${getStatusColor(vehicle.status)}`}>
                 {getStatusIcon(vehicle.status)}
                 {vehicle.status}
               </div>
             </div>
             
             <div className="space-y-2 mt-4 text-sm">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>Category</span>
-                <span className="text-slate-300">{vehicle.category}</span>
+                <span className="text-slate-800 dark:text-slate-200 font-medium">{vehicle.category}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>Fuel Type</span>
-                <span className="text-slate-300">{vehicle.fuel_type}</span>
+                <span className="text-slate-800 dark:text-slate-200 font-medium">{vehicle.fuel_type}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>Year</span>
-                <span className="text-slate-300">{vehicle.manufacturing_year}</span>
+                <span className="text-slate-800 dark:text-slate-200 font-medium">{vehicle.manufacturing_year}</span>
               </div>
             </div>
           </div>
         ))}
         
         {filteredVehicles.length === 0 && (
-          <div className="col-span-full py-12 text-center text-slate-400 bg-slate-800/30 rounded-xl border border-slate-700/50 border-dashed">
+          <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700/50 border-dashed">
             No vehicles found matching your criteria.
           </div>
         )}

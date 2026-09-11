@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const DEFAULT_SUPABASE_URL = 'https://ogzwkbhlzooblecqjowf.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_TZyig_pH9ybVEf1_K12O5g_rbkYoeAz';
 
 export interface SupabaseConfig {
   url: string;
@@ -12,21 +13,34 @@ export function getSupabaseConfig(): SupabaseConfig {
   const storedKey = localStorage.getItem('vwfms_supabase_anon_key');
   
   const url = storedUrl || import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-  const anonKey = storedKey || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const anonKey = storedKey || import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
   
   return { url, anonKey };
 }
 
+let supabaseInstance: SupabaseClient | null = null;
+let currentClientUrl = '';
+let currentClientKey = '';
+
 export function saveSupabaseConfig(config: SupabaseConfig): void {
   localStorage.setItem('vwfms_supabase_url', config.url);
   localStorage.setItem('vwfms_supabase_anon_key', config.anonKey);
+  try {
+    supabaseInstance = createClient(config.url, config.anonKey);
+    currentClientUrl = config.url;
+    currentClientKey = config.anonKey;
+  } catch (err) {
+    console.error('Failed to create Supabase client:', err);
+    supabaseInstance = null;
+  }
 }
 
 export function clearSupabaseConfig(): void {
   localStorage.removeItem('vwfms_supabase_anon_key');
+  supabaseInstance = null;
+  currentClientUrl = '';
+  currentClientKey = '';
 }
-
-let supabaseInstance: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient | null {
   const { url, anonKey } = getSupabaseConfig();
@@ -34,9 +48,11 @@ export function getSupabaseClient(): SupabaseClient | null {
     return null;
   }
 
-  if (!supabaseInstance) {
+  if (!supabaseInstance || currentClientUrl !== url || currentClientKey !== anonKey) {
     try {
       supabaseInstance = createClient(url, anonKey);
+      currentClientUrl = url;
+      currentClientKey = anonKey;
     } catch (err) {
       console.error('Failed to initialize Supabase client:', err);
       return null;
