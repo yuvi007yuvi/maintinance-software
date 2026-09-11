@@ -79,7 +79,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({ isOpen, onClose })
                 Supabase Backend Configuration
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Nagar Nigam Aligarh – Vehicle Workshop & Fleet Management System
+                VWFMS – Vehicle Workshop & Fleet Management System
               </p>
             </div>
           </div>

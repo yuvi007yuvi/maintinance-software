@@ -65,14 +65,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSupabaseModal, onSelectTab
           <div>
             <div className="flex items-center gap-2">
               <span className="font-heading font-extrabold text-lg text-slate-900 dark:text-white tracking-tight">
-                NAGAR NIGAM ALIGARH
+                VWFMS FLEET COMMAND
               </span>
               <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
                 SBM (Urban)
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Vehicle Workshop & Fleet Management System (VWFMS)
+              Vehicle Workshop & Fleet Management System
             </p>
           </div>
         </div>

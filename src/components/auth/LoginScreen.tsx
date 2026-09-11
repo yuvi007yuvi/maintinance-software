@@ -82,14 +82,14 @@ export const LoginScreen: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                Nagar Nigam Aligarh
+                VWFMS Fleet Portal
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/50">
                 SBM (Urban)
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              नगर निगम अलीगढ़ • Vehicle Workshop & Fleet Management System (VWFMS)
+              Vehicle Workshop & Fleet Management System (VWFMS) • Universal Civic Operations
             </p>
           </div>
         </div>
@@ -131,7 +131,7 @@ export const LoginScreen: React.FC = () => {
                 Municipal Fleet & Workshop Command
               </h2>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                Official single sign-on gateway for Nagar Nigam Aligarh officers, fleet managers, workshop engineers, and sanitation beat drivers.
+                Official single sign-on gateway for municipal and urban fleet officers, fleet managers, workshop engineers, and sanitation beat drivers.
               </p>
 
               {/* Feature Highlights */}
@@ -261,7 +261,7 @@ export const LoginScreen: React.FC = () => {
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. commissioner@nagarnigamaligarh.in"
+                        placeholder="e.g. commissioner@vwfms.gov.in"
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                         required
                       />
@@ -273,7 +273,7 @@ export const LoginScreen: React.FC = () => {
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                         Password
                       </label>
-                      <span className="text-[11px] text-slate-400">Default: aligarh2026</span>
+                      <span className="text-[11px] text-slate-400">Default: fleet2026</span>
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -300,7 +300,7 @@ export const LoginScreen: React.FC = () => {
 
                     <button
                       type="button"
-                      onClick={() => setEmail('commissioner@nagarnigamaligarh.in')}
+                      onClick={() => setEmail('commissioner@vwfms.gov.in')}
                       className="text-emerald-600 dark:text-emerald-400 hover:underline text-[11px] font-medium"
                     >
                       Use Demo Email
@@ -327,7 +327,7 @@ export const LoginScreen: React.FC = () => {
 
             {/* Bottom Disclaimer */}
             <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-[10px] text-slate-400">
-              Swachh Bharat Mission (Urban) • Nagar Nigam Aligarh Central Operations Portal
+              Swachh Bharat Mission (Urban) • Central Fleet & Workshop Command Portal
             </div>
           </div>
         </div>
@@ -335,7 +335,7 @@ export const LoginScreen: React.FC = () => {
 
       {/* Footer Strip */}
       <footer className="py-3 px-6 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
-        Nagar Nigam Aligarh Municipal Fleet Portal • Secured by TLS 1.3 & Role-Based Access Control
+        Universal Vehicle Workshop & Fleet Management System (VWFMS) • Secured by TLS 1.3 & Role-Based Access Control
       </footer>
     </div>
   );

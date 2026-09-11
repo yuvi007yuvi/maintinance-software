@@ -75,7 +75,7 @@ export const AddVehicleModal: React.FC<AddVehicleModalProps> = ({ isOpen, onClos
                 Register New Municipal Vehicle
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Add asset to Nagar Nigam Aligarh Digital Vehicle Master
+                Add asset to Digital Fleet & Vehicle Master
               </p>
             </div>
           </div>

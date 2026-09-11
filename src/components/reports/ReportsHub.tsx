@@ -36,7 +36,7 @@ export default function ReportsHub() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Reports & Analytics Hub</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Generate MIS reports for Nagar Nigam officials</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Generate MIS reports for fleet management & municipal administration</p>
         </div>
         
         <div className="flex items-center gap-3">

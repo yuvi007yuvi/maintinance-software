@@ -380,7 +380,7 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
                   </span>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400">Expiry Date: <strong className="text-slate-800 dark:text-slate-200">{vehicle.fitness_expiry}</strong></p>
-                <p className="text-[11px] text-slate-400 mt-2">Required by RTO Aligarh for commercial municipal vehicles</p>
+                <p className="text-[11px] text-slate-400 mt-2">Required by RTO for commercial municipal vehicles</p>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 shadow-xs">
@@ -422,7 +422,7 @@ export const Vehicle360Modal: React.FC<Vehicle360ModalProps> = ({
         {/* Footer actions */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 flex items-center justify-between">
           <div className="text-xs text-slate-500 dark:text-slate-400">
-            Nagar Nigam Asset ID: <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">{vehicle.id}</span>
+            Fleet Asset ID: <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">{vehicle.id}</span>
           </div>
 
           <div className="flex items-center gap-2">

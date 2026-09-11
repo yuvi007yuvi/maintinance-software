@@ -25,7 +25,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onOpenReportBr
         <div>
           <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs mb-1">
             <Building2 className="w-4 h-4" />
-            <span>NAGAR NIGAM ALIGARH – CENTRAL CONTROL & COMMAND</span>
+            <span>CENTRAL FLEET CONTROL & COMMAND</span>
           </div>
           <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white tracking-tight">
             Fleet Operations & Workshop Monitoring System
