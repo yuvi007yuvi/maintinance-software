@@ -17,7 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Activity,
-  ShieldCheck,
+  LogOut,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -46,7 +46,7 @@ interface NavGroup {
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const { kpi, breakdowns, jobCards, redeployments, auditLogs } = useApp();
-  const { currentRole, currentUser } = useAuth();
+  const { currentRole, currentUser, logout } = useAuth();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -424,7 +424,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
                   {currentRole.replace(/_/g, ' ')}
                 </p>
               </div>
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 opacity-80" />
+              <button
+                onClick={logout}
+                className="p-1 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                title="Log out of session"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
           </>
         ) : (

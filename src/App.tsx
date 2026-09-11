@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useAuth } from './context/AuthContext';
+import { LoginScreen } from './components/auth/LoginScreen';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './components/dashboard/Dashboard';
@@ -14,8 +16,13 @@ import DatabaseStatusHub from './components/database/DatabaseStatusHub';
 import { SupabaseModal } from './components/layout/SupabaseModal';
 
 function AppContent() {
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
+
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {

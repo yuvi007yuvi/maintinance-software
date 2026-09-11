@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Database,
   RefreshCw,
-  UserCheck,
   Bell,
   Clock,
   Car,
   Sun,
   Moon,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
@@ -21,7 +21,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenSupabaseModal, onSelectTab }) => {
-  const { currentRole, setRole } = useAuth();
+  const { currentRole, currentUser, setRole, logout } = useAuth();
   const { kpi, refreshData } = useApp();
   const { theme, toggleTheme } = useTheme();
   const [timeStr, setTimeStr] = useState<string>('');
@@ -122,16 +122,24 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSupabaseModal, onSelectTab
             </span>
           </button>
 
-          {/* Role Switcher */}
-          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
-            <div className="flex items-center gap-1 px-1.5 text-slate-500 dark:text-slate-400">
-              <UserCheck className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-              <span className="text-[11px] font-medium hidden lg:inline">Role:</span>
+          {/* Authenticated Officer & Role Switcher */}
+          <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
+            <div className="flex items-center gap-1.5 px-2">
+              <div className="w-5 h-5 rounded-md bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs">
+                {currentUser?.full_name?.charAt(0) || 'U'}
+              </div>
+              <div className="hidden xl:block text-left">
+                <p className="text-[11px] font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[130px]">
+                  {currentUser?.full_name}
+                </p>
+              </div>
             </div>
+
             <select
               value={currentRole}
               onChange={(e) => setRole(e.target.value as UserRole)}
-              className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs font-semibold py-1 px-2 rounded border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
+              className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-xs font-semibold py-1 px-2 rounded border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              title="Switch simulated role for testing"
             >
               <option value="nagar_nigam_officer">Officer (IAS / Comm.)</option>
               <option value="fleet_manager">Fleet Manager</option>
@@ -142,6 +150,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSupabaseModal, onSelectTab
               <option value="super_admin">Super Admin</option>
             </select>
           </div>
+
+          {/* Secure Logout Button */}
+          <button
+            onClick={logout}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/50 dark:hover:bg-rose-900/50 transition-colors shadow-2xs"
+            title="Sign out of municipal session"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
 
           {/* Quick Alert Bell */}
           <button
