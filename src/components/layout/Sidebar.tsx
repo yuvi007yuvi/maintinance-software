@@ -10,10 +10,14 @@ import {
   FileBarChart2,
   History,
   Database,
+  Search,
+  X,
   ChevronDown,
   ChevronRight,
-  Search,
-  CheckCircle2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Activity,
+  ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -27,17 +31,16 @@ interface NavItem {
   id: string;
   label: string;
   hindiLabel: string;
-  subtitle: string;
   icon: React.ElementType;
-  badge?: string | null;
-  badgeColor?: string;
+  badge?: string | number | null;
+  badgeType?: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+  pulse?: boolean;
 }
 
-interface NavSection {
+interface NavGroup {
   id: string;
   title: string;
   hindiTitle: string;
-  icon: React.ElementType;
   items: NavItem[];
 }
 
@@ -45,266 +48,248 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const { kpi, breakdowns, jobCards, redeployments, auditLogs } = useApp();
   const { currentRole, currentUser } = useAuth();
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
-  const toggleSection = (sectionId: string) => {
-    setCollapsedSections((prev) => ({
+  const toggleGroup = (groupId: string) => {
+    setCollapsedGroups((prev) => ({
       ...prev,
-      [sectionId]: !prev[sectionId],
+      [groupId]: !prev[groupId],
     }));
   };
 
+  // Metric counts
   const activeBreakdownsCount = breakdowns.filter(
     (b) => b.status !== 'Completed' && b.status !== 'Field Redeployment'
   ).length;
-
   const activeJobsCount = jobCards.filter((jc) => jc.status !== 'Closed').length;
   const activeRedeploymentsCount = redeployments.filter((r) => r.status === 'Active').length;
 
-  const sections: NavSection[] = useMemo(() => [
+  // Nav configuration
+  const groups: NavGroup[] = useMemo(() => [
     {
       id: 'command',
-      title: 'Executive & Command',
-      hindiTitle: 'कमांड एवं नियंत्रण कक्ष',
-      icon: LayoutDashboard,
+      title: 'Command & Telemetry',
+      hindiTitle: 'कमांड कक्ष',
       items: [
         {
           id: 'dashboard',
           label: 'Executive Dashboard',
-          hindiLabel: 'डैशबोर्ड एवं मुख्य संकेतक',
-          subtitle: 'Live Fleet SLA & Telemetry',
+          hindiLabel: 'डैशबोर्ड',
           icon: LayoutDashboard,
-          badge: `${kpi.availabilityPercentage}% SLA`,
-          badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300',
+          badge: `${kpi.availabilityPercentage}%`,
+          badgeType: kpi.availabilityPercentage >= 80 ? 'success' : 'warning',
         },
       ],
     },
     {
       id: 'fleet',
       title: 'Fleet Operations',
-      hindiTitle: 'वाहन बेड़ा एवं संचालन',
-      icon: Truck,
+      hindiTitle: 'वाहन बेड़ा',
       items: [
         {
           id: 'vehicles',
           label: 'Fleet Master & 360°',
-          hindiLabel: 'वाहन मास्टर एवं ३६०° विवरण',
-          subtitle: 'Asset Register & Diagnostics',
+          hindiLabel: 'वाहन रजिस्टर',
           icon: Truck,
-          badge: `${kpi.totalFleet} Total`,
-          badgeColor: 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-700 dark:text-slate-200',
+          badge: kpi.totalFleet,
+          badgeType: 'neutral',
         },
         {
           id: 'maintenance',
-          label: 'Compliance & Expiries',
-          hindiLabel: 'फिटनेस एवं वैधानिक प्रपत्र',
-          subtitle: 'RTO Fitness, Insurance, PUC',
+          label: 'Compliance & Fitness',
+          hindiLabel: 'वैधानिक प्रपत्र',
           icon: CalendarCheck,
-          badge: kpi.preventiveMaintenanceDue > 0 ? `${kpi.preventiveMaintenanceDue} Due` : 'Clear',
-          badgeColor: kpi.preventiveMaintenanceDue > 0
-            ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300'
-            : 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300',
+          badge: kpi.preventiveMaintenanceDue > 0 ? `${kpi.preventiveMaintenanceDue} Due` : null,
+          badgeType: kpi.preventiveMaintenanceDue > 0 ? 'warning' : 'neutral',
         },
         {
           id: 'redeployment',
-          label: 'Standby Redeployment',
-          hindiLabel: 'आपातकालीन वाहन प्रतिस्थापन',
-          subtitle: 'Zero-Downtime Route Desk',
+          label: 'Standby Route Desk',
+          hindiLabel: 'प्रतिस्थापन',
           icon: Repeat,
-          badge: activeRedeploymentsCount > 0 ? `${activeRedeploymentsCount} Active` : null,
-          badgeColor: 'bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-500/20 dark:text-teal-300',
+          badge: activeRedeploymentsCount > 0 ? activeRedeploymentsCount : null,
+          badgeType: 'info',
         },
       ],
     },
     {
       id: 'workshop',
       title: 'Workshop & Maintenance',
-      hindiTitle: 'कार्यशाला एवं रखरखाव',
-      icon: Wrench,
+      hindiTitle: 'कार्यशाला',
       items: [
         {
           id: 'breakdowns',
           label: 'Breakdown Incidents',
-          hindiLabel: 'ब्रेकडाउन एवं संग्रहण',
-          subtitle: 'Field Triage & Collection',
+          hindiLabel: 'ब्रेकडाउन',
           icon: AlertTriangle,
-          badge: activeBreakdownsCount > 0 ? `${activeBreakdownsCount} Active` : 'All Clear',
-          badgeColor: activeBreakdownsCount > 0
-            ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 animate-pulse'
-            : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400',
+          badge: activeBreakdownsCount > 0 ? activeBreakdownsCount : null,
+          badgeType: 'danger',
+          pulse: activeBreakdownsCount > 0,
         },
         {
           id: 'workshop',
           label: 'Workshop Job Cards',
-          hindiLabel: 'कार्यशाला एवं जॉब कार्ड',
-          subtitle: 'Kanban Stages & Mechanic Tasks',
+          hindiLabel: 'जॉब कार्ड',
           icon: Wrench,
-          badge: activeJobsCount > 0 ? `${activeJobsCount} In-Shop` : null,
-          badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300',
+          badge: activeJobsCount > 0 ? activeJobsCount : null,
+          badgeType: 'warning',
         },
         {
           id: 'parts',
-          label: 'Spare Parts & Inventory',
-          hindiLabel: 'स्पेयर पार्ट्स एवं स्टॉक',
-          subtitle: 'Central Depot & Reorder Levels',
+          label: 'Spares & Inventory',
+          hindiLabel: 'स्पेयर पार्ट्स',
           icon: Package,
-          badge: kpi.lowStockPartsCount > 0 ? `${kpi.lowStockPartsCount} Low` : 'In Stock',
-          badgeColor: kpi.lowStockPartsCount > 0
-            ? 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-500/20 dark:text-orange-300'
-            : 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-700 dark:text-slate-300',
+          badge: kpi.lowStockPartsCount > 0 ? `${kpi.lowStockPartsCount} Low` : null,
+          badgeType: kpi.lowStockPartsCount > 0 ? 'warning' : 'neutral',
         },
       ],
     },
     {
       id: 'governance',
-      title: 'Governance & Analytics',
-      hindiTitle: 'प्रशासन एवं ऑडिट',
-      icon: FileBarChart2,
+      title: 'Governance & Records',
+      hindiTitle: 'प्रशासन',
       items: [
         {
           id: 'reports',
-          label: 'Reports & Analytics',
-          hindiLabel: 'प्रबंधन रिपोर्ट एवं विश्लेषण',
-          subtitle: 'MIS Reports & CSV Export',
+          label: 'Analytics & Reports',
+          hindiLabel: 'एमआईएस रिपोर्ट',
           icon: FileBarChart2,
-          badge: 'MIS',
-          badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300',
         },
         {
           id: 'audit',
-          label: 'Audit Trail & History',
-          hindiLabel: 'ऑडिट ट्रेल एवं उत्तरदायित्व',
-          subtitle: 'Immutable Action Logs',
+          label: 'Audit Trail & Logs',
+          hindiLabel: 'ऑडिट लॉग',
           icon: History,
-          badge: `${auditLogs.length} Logs`,
-          badgeColor: 'bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-500/20 dark:text-purple-300',
+          badge: auditLogs.length > 0 ? auditLogs.length : null,
+          badgeType: 'neutral',
         },
         {
           id: 'database',
-          label: 'Database & Supabase',
-          hindiLabel: 'डेटाबेस एवं बैकएंड सेटिंग्स',
-          subtitle: 'Synchronized Cloud Tables',
+          label: 'Database & Sync',
+          hindiLabel: 'डेटाबेस सेटिंग्स',
           icon: Database,
           badge: 'Live',
-          badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300',
+          badgeType: 'success',
         },
       ],
     },
   ], [kpi, activeBreakdownsCount, activeJobsCount, activeRedeploymentsCount, auditLogs.length]);
 
-  // Filter sections by search
-  const filteredSections = useMemo(() => {
-    if (!searchQuery.trim()) return sections;
-    const query = searchQuery.toLowerCase();
+  // Search filtering
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery.trim()) return groups;
+    const q = searchQuery.toLowerCase();
 
-    return sections
-      .map((sec) => {
-        const matchesSection = sec.title.toLowerCase().includes(query) || sec.hindiTitle.toLowerCase().includes(query);
-        const matchingItems = sec.items.filter(
+    return groups
+      .map((grp) => {
+        const matchesGrp = grp.title.toLowerCase().includes(q) || grp.hindiTitle.toLowerCase().includes(q);
+        const matchingItems = grp.items.filter(
           (item) =>
-            item.label.toLowerCase().includes(query) ||
-            item.hindiLabel.toLowerCase().includes(query) ||
-            item.subtitle.toLowerCase().includes(query)
+            item.label.toLowerCase().includes(q) ||
+            item.hindiLabel.toLowerCase().includes(q)
         );
 
-        if (matchesSection) return sec;
-        if (matchingItems.length > 0) {
-          return { ...sec, items: matchingItems };
-        }
+        if (matchesGrp) return grp;
+        if (matchingItems.length > 0) return { ...grp, items: matchingItems };
         return null;
       })
-      .filter(Boolean) as NavSection[];
-  }, [sections, searchQuery]);
+      .filter(Boolean) as NavGroup[];
+  }, [groups, searchQuery]);
+
+  const getBadgeClasses = (type: NavItem['badgeType'] = 'neutral') => {
+    switch (type) {
+      case 'danger':
+        return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30';
+      case 'warning':
+        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30';
+      case 'success':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30';
+      case 'info':
+        return 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30';
+      default:
+        return 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700';
+    }
+  };
 
   return (
-    <aside className="w-72 lg:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 h-[calc(100vh-61px)] overflow-hidden no-print select-none shadow-xs">
-      {/* Officer Scope Card */}
-      <div className="p-3.5 mx-3 mt-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 shadow-xs shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow-sm">
-            {currentUser.full_name.charAt(0)}
+    <aside
+      className={`relative flex flex-col shrink-0 h-[calc(100vh-61px)] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-200 select-none z-20 ${
+        isCollapsed ? 'w-18' : 'w-64'
+      }`}
+    >
+      {/* Top Bar: Search & Collapse Button */}
+      <div className="p-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2 shrink-0">
+        {!isCollapsed ? (
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search modules..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-8 pr-7 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
-          <div className="overflow-hidden flex-1">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                {currentUser.full_name}
-              </p>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200 font-bold">
-                Online
-              </span>
-            </div>
-            <p className="text-[11px] text-blue-600 dark:text-cyan-400 capitalize truncate font-medium">
-              {currentRole.replace(/_/g, ' ')}
-            </p>
+        ) : (
+          <div className="w-full flex justify-center">
+            <span className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-200 dark:border-emerald-800/50">
+              NN
+            </span>
           </div>
-        </div>
+        )}
 
-        {/* Fleet Readiness Bar */}
-        <div className="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between text-[11px]">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Fleet Availability</span>
-          <span className="font-mono font-bold text-slate-900 dark:text-white">
-            {kpi.availableVehicles + kpi.deployedVehicles} / {kpi.totalFleet} ({kpi.availabilityPercentage}%)
-          </span>
-        </div>
+        {/* Expand / Collapse Rail Toggle */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        >
+          {isCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+        </button>
       </div>
 
-      {/* Quick Filter Search Bar */}
-      <div className="px-3 pt-3 shrink-0">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search sections or modules..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-          />
-        </div>
-      </div>
-
-      {/* Grouped Navigation List */}
-      <nav className="p-3 space-y-4 flex-1 overflow-y-auto">
-        {filteredSections.map((section) => {
-          const isCollapsed = Boolean(collapsedSections[section.id]);
-          const SectionIcon = section.icon;
+      {/* Navigation Scroll Area */}
+      <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
+        {filteredGroups.map((group) => {
+          const isGroupCollapsed = Boolean(collapsedGroups[group.id]) && !isCollapsed;
 
           return (
-            <div key={section.id} className="space-y-1">
-              {/* Group Section Header */}
-              <button
-                type="button"
-                onClick={() => toggleSection(section.id)}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors group"
-              >
-                <div className="flex items-center gap-2">
-                  <SectionIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors" />
-                  <div className="text-left">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 block leading-tight">
-                      {section.title}
-                    </span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block leading-none mt-0.5">
-                      {section.hindiTitle}
+            <div key={group.id} className="space-y-0.5">
+              {/* Group Header (Only when not collapsed) */}
+              {!isCollapsed ? (
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.id)}
+                  className="w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 uppercase tracking-wider transition-colors group"
+                >
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span>{group.title}</span>
+                    <span className="text-[10px] font-normal normal-case opacity-70 text-slate-400">
+                      ({group.hindiTitle})
                     </span>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-slate-400">
-                  <span className="text-[10px] font-mono font-semibold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                    {section.items.length}
+                  <span className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">
+                    {isGroupCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                   </span>
-                  {isCollapsed ? (
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  )}
-                </div>
-              </button>
+                </button>
+              ) : (
+                <div className="h-px bg-slate-200 dark:bg-slate-800 my-2 mx-1" />
+              )}
 
-              {/* Items within Section */}
-              {!isCollapsed && (
-                <div className="space-y-1 pl-1">
-                  {section.items.map((item) => {
+              {/* Group Items */}
+              {!isGroupCollapsed && (
+                <div className="space-y-1">
+                  {group.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
 
@@ -313,39 +298,63 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
                         key={item.id}
                         type="button"
                         onClick={() => onSelectTab(item.id)}
-                        className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all group ${
+                        title={isCollapsed ? `${item.label} (${item.hindiLabel})` : undefined}
+                        className={`w-full relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all group ${
                           isActive
-                            ? 'bg-emerald-50 dark:bg-emerald-600/20 text-emerald-950 dark:text-white border border-emerald-200 dark:border-emerald-500/30 shadow-xs'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent'
-                        }`}
+                            ? 'bg-emerald-50 text-emerald-950 dark:bg-emerald-500/15 dark:text-emerald-300 font-semibold'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+                        } ${isCollapsed ? 'justify-center px-0 py-2.5' : ''}`}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                              isActive
-                                ? 'bg-emerald-600 text-white shadow-xs'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:text-slate-800 dark:group-hover:text-white'
-                            }`}
-                          >
-                            <Icon className="w-4 h-4" />
-                          </div>
+                        {/* Active Accent Bar on Left */}
+                        {isActive && (
+                          <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-emerald-600 rounded-r-full" />
+                        )}
 
-                          <div className="text-left truncate">
-                            <div className={`font-semibold leading-tight truncate ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'}`}>
-                              {item.label}
-                            </div>
-                            <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                              {item.subtitle}
-                            </div>
-                          </div>
+                        {/* Icon */}
+                        <div
+                          className={`flex items-center justify-center shrink-0 transition-colors ${
+                            isActive
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
                         </div>
 
-                        {item.badge && (
+                        {/* Text Details (When expanded) */}
+                        {!isCollapsed && (
+                          <>
+                            <span className="truncate flex-1 text-left">
+                              {item.label}
+                            </span>
+
+                            {/* Badge */}
+                            {item.badge !== undefined && item.badge !== null && (
+                              <span
+                                className={`ml-auto text-[10px] font-semibold px-1.5 py-0.2 rounded-full border leading-tight shrink-0 flex items-center gap-1 ${getBadgeClasses(
+                                  item.badgeType
+                                )}`}
+                              >
+                                {item.pulse && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                                )}
+                                {item.badge}
+                              </span>
+                            )}
+                          </>
+                        )}
+
+                        {/* Tooltip Badge for collapsed mode */}
+                        {isCollapsed && item.badge !== undefined && item.badge !== null && (
                           <span
-                            className={`ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${item.badgeColor}`}
-                          >
-                            {item.badge}
-                          </span>
+                            className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
+                              item.badgeType === 'danger'
+                                ? 'bg-rose-500 animate-ping'
+                                : item.badgeType === 'warning'
+                                ? 'bg-amber-500'
+                                : 'bg-emerald-500'
+                            }`}
+                          />
                         )}
                       </button>
                     );
@@ -356,22 +365,79 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
           );
         })}
 
-        {filteredSections.length === 0 && (
-          <div className="text-center py-8 text-slate-400 text-xs italic">
-            No modules match "{searchQuery}"
+        {filteredGroups.length === 0 && !isCollapsed && (
+          <div className="text-center py-6 text-slate-400 text-xs italic">
+            No matching modules
           </div>
         )}
       </nav>
 
-      {/* Footer Municipal Scope */}
-      <div className="p-3.5 m-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-[11px] shrink-0">
-        <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-bold mb-1">
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>VWFMS v1.0 • Nagar Nigam Aligarh</span>
-        </div>
-        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-          Swachh Bharat Mission (SBM) Urban Municipal Fleet Command Portal
-        </p>
+      {/* Footer: Fleet Availability Ticker & Officer Identity */}
+      <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 shrink-0 space-y-2.5">
+        {!isCollapsed ? (
+          <>
+            {/* Fleet Mini Gauge */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 shadow-2xs">
+              <div className="flex items-center justify-between text-[11px] mb-1.5">
+                <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium">
+                  <Activity className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>Fleet Readiness</span>
+                </div>
+                <span className="font-mono font-bold text-slate-900 dark:text-white">
+                  {kpi.availabilityPercentage}%
+                </span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden flex">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    kpi.availabilityPercentage >= 75
+                      ? 'bg-emerald-500'
+                      : kpi.availabilityPercentage >= 50
+                      ? 'bg-amber-500'
+                      : 'bg-rose-500'
+                  }`}
+                  style={{ width: `${kpi.availabilityPercentage}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                <span>{kpi.availableVehicles + kpi.deployedVehicles}/{kpi.totalFleet} Active</span>
+                <span>{kpi.totalDowntimeHours}h Down</span>
+              </div>
+            </div>
+
+            {/* Officer Profile Badge */}
+            <div className="flex items-center gap-2.5 px-1 pt-0.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                {currentUser.full_name.charAt(0)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {currentUser.full_name}
+                  </p>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Online" />
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize truncate">
+                  {currentRole.replace(/_/g, ' ')}
+                </p>
+              </div>
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 opacity-80" />
+            </div>
+          </>
+        ) : (
+          /* Collapsed Mini Profile */
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer"
+              title={`${currentUser.full_name} (${currentRole.replace(/_/g, ' ')})`}
+            >
+              {currentUser.full_name.charAt(0)}
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );
