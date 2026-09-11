@@ -31,7 +31,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onOpenReportBr
             Fleet Operations & Workshop Monitoring System
           </h1>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
-            Real-time tracking of municipal solid waste compactors, tippers, sewer suction jetting units, and road sweepers across 4 administrative zones and 70 wards.
+            Real-time operational tracking of civic vehicle assets, active workshop maintenance, parts inventory, and route standby deployments.
           </p>
         </div>
 

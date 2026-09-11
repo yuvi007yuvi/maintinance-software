@@ -14,7 +14,7 @@ import { useApp } from '../../context/AppContext';
 export const KPICards: React.FC = () => {
   const { kpi } = useApp();
 
-  const isDowntimeHigh = kpi.availabilityPercentage < kpi.targetAvailabilityPercentage;
+  const isDowntimeHigh = kpi.totalFleet > 0 && kpi.availabilityPercentage < kpi.targetAvailabilityPercentage;
 
   return (
     <div className="space-y-4">
@@ -57,7 +57,9 @@ export const KPICards: React.FC = () => {
           </div>
 
           <p className="mt-2.5 text-[11px] text-slate-500 dark:text-slate-400">
-            {kpi.availableVehicles + kpi.deployedVehicles + kpi.readyForDeploymentVehicles} of {kpi.totalFleet} vehicles ready or deployed in municipal wards
+            {kpi.totalFleet > 0
+              ? `${kpi.availableVehicles + kpi.deployedVehicles + kpi.readyForDeploymentVehicles} of ${kpi.totalFleet} vehicles ready or deployed in municipal wards`
+              : 'Fleet database ready. Register your first vehicle.'}
           </p>
         </div>
 

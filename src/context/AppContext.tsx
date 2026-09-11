@@ -202,7 +202,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const workshopVehicles = underRepairVehicles + awaitingPartsVehicles;
 
   const operationalVehicles = availableVehicles + deployedVehicles + readyForDeploymentVehicles;
-  const availabilityPercentage = totalFleet > 0 ? Math.round((operationalVehicles / totalFleet) * 100) : 0;
+  const availabilityPercentage = totalFleet > 0 ? Math.round((operationalVehicles / totalFleet) * 100) : 100;
 
   let totalDowntimeHours = 0;
   breakdowns.forEach((b) => {

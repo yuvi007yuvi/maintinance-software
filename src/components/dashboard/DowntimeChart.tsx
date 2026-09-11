@@ -46,8 +46,8 @@ export const DowntimeChart: React.FC = () => {
         });
 
         const activeCount = activeOnDay.length;
-        const total = kpi.totalFleet || vehicles.length || 1;
-        const availPct = Math.max(0, Math.min(100, Math.round(((total - activeCount) / total) * 100)));
+        const total = kpi.totalFleet || vehicles.length;
+        const availPct = total > 0 ? Math.max(0, Math.min(100, Math.round(((total - activeCount) / total) * 100))) : 100;
         const dayDowntime = activeCount * 8;
 
         days.push({
