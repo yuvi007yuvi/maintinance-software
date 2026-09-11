@@ -1,0 +1,151 @@
+import { createClient } from '@supabase/supabase-js';
+
+const url = 'https://ogzwkbhlzooblecqjowf.supabase.co';
+const key = 'sb_publishable_TZyig_pH9ybVEf1_K12O5g_rbkYoeAz';
+const supabase = createClient(url, key);
+
+async function seed() {
+  console.log('Seeding Supabase database with municipal fleet data...');
+
+  // 1. Zones
+  const zones = [
+    { id: 'zone-1', name: 'Civil Lines Zone', code: 'ZN-CL', description: 'North Aligarh administrative & residential sectors' },
+    { id: 'zone-2', name: 'Bannadevi Zone', code: 'ZN-BD', description: 'Industrial area, commercial markets and GT Road corridor' },
+    { id: 'zone-3', name: 'Sasni Gate Zone', code: 'ZN-SG', description: 'Historic core, dense heritage wards and old markets' },
+    { id: 'zone-4', name: 'Kwansi Zone', code: 'ZN-KW', description: 'South & eastern expanding residential colonies and bypass' }
+  ];
+  const { error: zErr } = await supabase.from('zones').upsert(zones);
+  console.log('Zones:', zErr ? zErr.message : 'OK');
+
+  // 2. Wards
+  const wards = [
+    { id: 'ward-1', ward_number: 1, name: 'Dodhpur & Medical Road', zone_id: 'zone-1', sanitation_inspector: 'Rajesh Sharma', contact_number: '+91 94123 88101' },
+    { id: 'ward-2', ward_number: 2, name: 'Kishanpur & Ramghat Road', zone_id: 'zone-1', sanitation_inspector: 'Vikram Singh', contact_number: '+91 94123 88102' },
+    { id: 'ward-3', ward_number: 3, name: 'Marris Road & Centre Point', zone_id: 'zone-1', sanitation_inspector: 'Anil Kumar', contact_number: '+91 94123 88103' },
+    { id: 'ward-4', ward_number: 4, name: 'Bannadevi Industrial Area', zone_id: 'zone-2', sanitation_inspector: 'Suresh Chandra', contact_number: '+91 94123 88104' },
+    { id: 'ward-5', ward_number: 5, name: 'Sarsol & GT Road', zone_id: 'zone-2', sanitation_inspector: 'Pramod Yadav', contact_number: '+91 94123 88105' },
+    { id: 'ward-6', ward_number: 6, name: 'Sasni Gate Main Market', zone_id: 'zone-3', sanitation_inspector: 'Manoj Gupta', contact_number: '+91 94123 88106' },
+    { id: 'ward-7', ward_number: 7, name: 'Delhi Gate & Achal Tal', zone_id: 'zone-3', sanitation_inspector: 'Mohd. Imran', contact_number: '+91 94123 88107' },
+    { id: 'ward-8', ward_number: 8, name: 'Kwansi Bypass & Surendra Nagar', zone_id: 'zone-4', sanitation_inspector: 'Dinesh Kumar', contact_number: '+91 94123 88108' },
+    { id: 'ward-9', ward_number: 9, name: 'Etah Chungi & Hem Chand Compound', zone_id: 'zone-4', sanitation_inspector: 'Sunil Verma', contact_number: '+91 94123 88109' },
+    { id: 'ward-10', ward_number: 10, name: 'Shah Jamal & Railway Station', zone_id: 'zone-3', sanitation_inspector: 'Abdul Qadir', contact_number: '+91 94123 88110' }
+  ];
+  const { error: wErr } = await supabase.from('wards').upsert(wards);
+  console.log('Wards:', wErr ? wErr.message : 'OK');
+
+  // 3. User Profiles
+  const users = [
+    { id: 'usr-admin', full_name: 'Er. Arvind Saxena', email: 'admin@nagarnigamaligarh.in', phone: '+91 94120 00001', role: 'super_admin', zone_id: 'zone-1' },
+    { id: 'usr-officer', full_name: 'Dr. Amit Pathak (IAS)', email: 'commissioner@nagarnigamaligarh.in', phone: '+91 94120 00002', role: 'nagar_nigam_officer', zone_id: 'zone-1' },
+    { id: 'usr-pm', full_name: 'Devendra Rawat', email: 'pm.sbm@nagarnigamaligarh.in', phone: '+91 94120 00003', role: 'project_manager', zone_id: 'zone-1' },
+    { id: 'usr-fleet', full_name: 'Mahesh Chandra Varshney', email: 'fleet.mgr@nagarnigamaligarh.in', phone: '+91 94120 00004', role: 'fleet_manager', zone_id: 'zone-1' },
+    { id: 'usr-workshop', full_name: 'Rakesh Babu Sharma', email: 'workshop.chief@nagarnigamaligarh.in', phone: '+91 94120 00005', role: 'workshop_manager', zone_id: 'zone-2' },
+    { id: 'usr-mech-1', full_name: 'Kallu Mistri (Sr. Hyd)', email: 'kallu.mechanic@nagarnigamaligarh.in', phone: '+91 94120 11001', role: 'mechanic', zone_id: 'zone-2' },
+    { id: 'usr-mech-2', full_name: 'Santosh Sharma (Engine)', email: 'santosh.mechanic@nagarnigamaligarh.in', phone: '+91 94120 11002', role: 'mechanic', zone_id: 'zone-2' },
+    { id: 'usr-mech-3', full_name: 'Irfan Khan (Auto Elec)', email: 'irfan.mechanic@nagarnigamaligarh.in', phone: '+91 94120 11003', role: 'mechanic', zone_id: 'zone-2' },
+    { id: 'usr-driver-1', full_name: 'Rameshwar Dayal', email: 'rameshwar.driver@nagarnigamaligarh.in', phone: '+91 94120 22001', role: 'driver', zone_id: 'zone-1' },
+    { id: 'usr-driver-2', full_name: 'Bhole Shankar', email: 'bhole.driver@nagarnigamaligarh.in', phone: '+91 94120 22002', role: 'driver', zone_id: 'zone-2' },
+    { id: 'usr-driver-3', full_name: 'Mohammad Aslam', email: 'aslam.driver@nagarnigamaligarh.in', phone: '+91 94120 22003', role: 'driver', zone_id: 'zone-3' },
+    { id: 'usr-driver-4', full_name: 'Satish Chandra', email: 'satish.driver@nagarnigamaligarh.in', phone: '+91 94120 22004', role: 'driver', zone_id: 'zone-4' }
+  ];
+  const { error: uErr } = await supabase.from('user_profiles').upsert(users);
+  console.log('Users:', uErr ? uErr.message : 'OK');
+
+  // 4. Workshops
+  const workshops = [
+    { id: 'ws-central', name: 'Central Municipal Workshop & Depot', location: 'Bannadevi Industrial Area, GT Road Aligarh', capacity: 25, manager_id: 'usr-workshop' },
+    { id: 'ws-zone1', name: 'Civil Lines Sub-Depot Workshop', location: 'Near Exhibition Ground, Aligarh', capacity: 10, manager_id: 'usr-workshop' },
+    { id: 'ws-zone3', name: 'Old City Maintenance Bay', location: 'Sasni Gate Nagar Nigam Yard, Aligarh', capacity: 8, manager_id: 'usr-workshop' }
+  ];
+  const { error: wsErr } = await supabase.from('workshops').upsert(workshops);
+  console.log('Workshops:', wsErr ? wsErr.message : 'OK');
+
+  // 5. Vehicles
+  const vehicles = [
+    { id: 'veh-1', registration_number: 'UP81 BT 1024', vehicle_type: 'Refuse Compactor (14 CBM)', category: 'Heavy Sanitation', make: 'Tata Motors', model: 'Signa 1918.K', manufacturing_year: 2022, fuel_type: 'Diesel', engine_number: '497TC92-0199', chassis_number: 'MAT412019N1A90812', capacity: '14 Cu.m', ownership_type: 'Municipal Owned', status: 'Under Repair', assigned_zone_id: 'zone-1', assigned_ward_id: 'ward-1', assigned_driver_id: 'usr-driver-1', purchase_date: '2022-04-10', insurance_expiry: '2027-04-09', fitness_expiry: '2026-11-20', puc_expiry: '2026-10-15', permit_expiry: '2028-04-09', current_odometer_km: 42800 },
+    { id: 'veh-2', registration_number: 'UP81 BT 1025', vehicle_type: 'Refuse Compactor (14 CBM)', category: 'Heavy Sanitation', make: 'Tata Motors', model: 'Signa 1918.K', manufacturing_year: 2022, fuel_type: 'Diesel', engine_number: '497TC92-0200', chassis_number: 'MAT412019N1A90813', capacity: '14 Cu.m', ownership_type: 'Municipal Owned', status: 'Deployed', assigned_zone_id: 'zone-1', assigned_ward_id: 'ward-2', assigned_driver_id: 'usr-driver-2', purchase_date: '2022-04-10', insurance_expiry: '2027-04-09', fitness_expiry: '2027-03-12', puc_expiry: '2026-12-05', permit_expiry: '2028-04-09', current_odometer_km: 39400 },
+    { id: 'veh-3', registration_number: 'UP81 AT 4521', vehicle_type: 'Dumper Placer (Twin Bin)', category: 'Medium Sanitation', make: 'Ashok Leyland', model: 'Ecomet 1215 HE', manufacturing_year: 2021, fuel_type: 'Diesel', engine_number: 'H6ETI4-8821', chassis_number: 'MB1EFAEB4MA128911', capacity: '6 Ton', ownership_type: 'Municipal Owned', status: 'Breakdown', assigned_zone_id: 'zone-2', assigned_ward_id: 'ward-4', assigned_driver_id: 'usr-driver-3', purchase_date: '2021-08-15', insurance_expiry: '2027-08-14', fitness_expiry: '2026-09-30', puc_expiry: '2026-10-01', permit_expiry: '2027-08-14', current_odometer_km: 51200 },
+    { id: 'veh-4', registration_number: 'UP81 AT 4522', vehicle_type: 'Dumper Placer (Twin Bin)', category: 'Medium Sanitation', make: 'Ashok Leyland', model: 'Ecomet 1215 HE', manufacturing_year: 2021, fuel_type: 'Diesel', engine_number: 'H6ETI4-8822', chassis_number: 'MB1EFAEB4MA128912', capacity: '6 Ton', ownership_type: 'Municipal Owned', status: 'Available', assigned_zone_id: 'zone-2', assigned_ward_id: 'ward-5', assigned_driver_id: null, purchase_date: '2021-08-15', insurance_expiry: '2027-08-14', fitness_expiry: '2027-01-10', puc_expiry: '2026-11-18', permit_expiry: '2027-08-14', current_odometer_km: 47800 },
+    { id: 'veh-5', registration_number: 'UP81 CZ 8890', vehicle_type: 'JCB Backhoe Loader', category: 'Special Equipment', make: 'JCB India', model: '3DX Super', manufacturing_year: 2023, fuel_type: 'Diesel', engine_number: '448TA4-3112', chassis_number: 'HAR3DXS02PC981240', capacity: '1.1 Cu.m', ownership_type: 'Municipal Owned', status: 'Under Repair', assigned_zone_id: 'zone-3', assigned_ward_id: 'ward-6', assigned_driver_id: null, purchase_date: '2023-02-20', insurance_expiry: '2028-02-19', fitness_expiry: '2027-05-14', puc_expiry: '2026-12-25', permit_expiry: '2028-02-19', current_odometer_km: 18600 },
+    { id: 'veh-6', registration_number: 'UP81 DT 3311', vehicle_type: 'Sewer Suction & Jetting Machine', category: 'Special Equipment', make: 'Tata Motors', model: 'LPT 1613 Cowl', manufacturing_year: 2020, fuel_type: 'Diesel', engine_number: '697TC56-4421', chassis_number: 'MAT416021L1A54321', capacity: '6000 Litres', ownership_type: 'Municipal Owned', status: 'Awaiting Spare Parts', assigned_zone_id: 'zone-3', assigned_ward_id: 'ward-7', assigned_driver_id: 'usr-driver-4', purchase_date: '2020-11-05', insurance_expiry: '2026-11-04', fitness_expiry: '2026-10-10', puc_expiry: '2026-09-28', permit_expiry: '2026-11-04', current_odometer_km: 68400 },
+    { id: 'veh-7', registration_number: 'UP81 DT 5521', vehicle_type: 'Mechanical Road Sweeper', category: 'Special Equipment', make: 'TPS Motors', model: 'RoadMaster 600', manufacturing_year: 2022, fuel_type: 'Diesel', engine_number: '4BT39-9182', chassis_number: 'TPS600N82190182', capacity: '6 CBM', ownership_type: 'Municipal Owned', status: 'Deployed', assigned_zone_id: 'zone-1', assigned_ward_id: 'ward-3', assigned_driver_id: null, purchase_date: '2022-09-15', insurance_expiry: '2027-09-14', fitness_expiry: '2027-04-18', puc_expiry: '2026-11-02', permit_expiry: '2027-09-14', current_odometer_km: 29100 },
+    { id: 'veh-8', registration_number: 'UP81 ET 7712', vehicle_type: 'Garbage Tipper (Tata Ace)', category: 'Light Sanitation', make: 'Tata Motors', model: 'Ace Gold CNG', manufacturing_year: 2023, fuel_type: 'CNG', engine_number: '275CNG-1102', chassis_number: 'MAT275CNG4PA88124', capacity: '1.8 CBM', ownership_type: 'Municipal Owned', status: 'Running', assigned_zone_id: 'zone-4', assigned_ward_id: 'ward-8', assigned_driver_id: null, purchase_date: '2023-06-11', insurance_expiry: '2028-06-10', fitness_expiry: '2027-08-20', puc_expiry: '2027-01-14', permit_expiry: '2028-06-10', current_odometer_km: 14200 },
+    { id: 'veh-9', registration_number: 'UP81 ET 7713', vehicle_type: 'Garbage Tipper (Tata Ace)', category: 'Light Sanitation', make: 'Tata Motors', model: 'Ace Gold CNG', manufacturing_year: 2023, fuel_type: 'CNG', engine_number: '275CNG-1103', chassis_number: 'MAT275CNG4PA88125', capacity: '1.8 CBM', ownership_type: 'Municipal Owned', status: 'Ready for Deployment', assigned_zone_id: 'zone-4', assigned_ward_id: 'ward-9', assigned_driver_id: null, purchase_date: '2023-06-11', insurance_expiry: '2028-06-10', fitness_expiry: '2027-08-20', puc_expiry: '2027-01-14', permit_expiry: '2028-06-10', current_odometer_km: 13900 },
+    { id: 'veh-10', registration_number: 'UP81 FT 9940', vehicle_type: 'Water Tanker (9000L)', category: 'Special Equipment', make: 'Ashok Leyland', model: 'Partner 1616', manufacturing_year: 2021, fuel_type: 'Diesel', engine_number: 'H4CTI-9921', chassis_number: 'MB1PART4M8192019', capacity: '9000 Litres', ownership_type: 'Municipal Owned', status: 'Available', assigned_zone_id: 'zone-2', assigned_ward_id: 'ward-5', assigned_driver_id: null, purchase_date: '2021-03-10', insurance_expiry: '2027-03-09', fitness_expiry: '2027-02-15', puc_expiry: '2026-12-10', permit_expiry: '2027-03-09', current_odometer_km: 34500 }
+  ];
+  const { error: vErr } = await supabase.from('vehicles').upsert(vehicles);
+  console.log('Vehicles:', vErr ? vErr.message : 'OK');
+
+  // 6. Parts
+  const parts = [
+    { id: 'prt-1', part_name: 'Hydraulic Main Cylinder Seal Kit (14 CBM)', part_number: 'HYD-SK-14C', category: 'Hydraulics', compatible_vehicle_types: 'Refuse Compactor (14 CBM)', unit: 'Sets', opening_stock: 12, current_stock: 2, min_stock: 5, supplier: 'Wipro Hydraulics Ltd.', purchase_price: 4850 },
+    { id: 'prt-2', part_name: 'Heavy Duty Brake Shoe Lining Set', part_number: 'BRK-SH-1918', category: 'Brakes', compatible_vehicle_types: 'Refuse Compactor, Dumper Placer', unit: 'Sets', opening_stock: 25, current_stock: 14, min_stock: 8, supplier: 'Rane Brakes India', purchase_price: 3200 },
+    { id: 'prt-3', part_name: 'High Pressure Jetting Hose (60m 1")', part_number: 'SEW-HOS-60M', category: 'Special Equipment', compatible_vehicle_types: 'Sewer Suction & Jetting Machine', unit: 'Nos', opening_stock: 4, current_stock: 1, min_stock: 2, supplier: 'Parker Hannifin', purchase_price: 24500 },
+    { id: 'prt-4', part_name: 'Diesel Fuel Injector Nozzle Assembly', part_number: 'ENG-NOZ-CRDI', category: 'Engine', compatible_vehicle_types: 'Tata Motors Signa, Ecomet', unit: 'Sets', opening_stock: 18, current_stock: 6, min_stock: 6, supplier: 'Bosch India Ltd.', purchase_price: 8900 },
+    { id: 'prt-5', part_name: 'JCB Heavy Duty Hydraulic Pump 3DX', part_number: 'JCB-HP-3DX', category: 'Hydraulics', compatible_vehicle_types: 'JCB Backhoe Loader', unit: 'Nos', opening_stock: 5, current_stock: 1, min_stock: 3, supplier: 'JCB Genuine Spares', purchase_price: 36000 },
+    { id: 'prt-6', part_name: 'Engine Oil 15W40 CI-4 Plus (210L Drum)', part_number: 'OIL-15W40-D', category: 'Consumables', compatible_vehicle_types: 'All Heavy & Medium Vehicles', unit: 'Litres', opening_stock: 630, current_stock: 180, min_stock: 200, supplier: 'Indian Oil Servo', purchase_price: 185 },
+    { id: 'prt-7', part_name: 'Alternator 24V 55A Heavy Duty', part_number: 'ELEC-ALT-24V', category: 'Electrical', compatible_vehicle_types: 'Tata Signa, Ashok Leyland', unit: 'Nos', opening_stock: 10, current_stock: 4, min_stock: 4, supplier: 'Lucas TVS', purchase_price: 7600 },
+    { id: 'prt-8', part_name: 'Clutch Plate & Pressure Assembly 352mm', part_number: 'CLT-SET-352', category: 'Transmission', compatible_vehicle_types: 'Tata 1918, Ecomet 1215', unit: 'Sets', opening_stock: 8, current_stock: 3, min_stock: 3, supplier: 'Valeo Clutch India', purchase_price: 11400 }
+  ];
+  const { error: pErr } = await supabase.from('parts').upsert(parts);
+  console.log('Parts:', pErr ? pErr.message : 'OK');
+
+  // 7. Breakdowns
+  const breakdowns = [
+    { id: 'bk-101', breakdown_number: 'BD-2026-0089', vehicle_id: 'veh-1', driver_id: 'usr-driver-1', reported_by: 'Rameshwar Dayal (Driver)', location: 'Medical Road, Near AMU Circle', ward_id: 'ward-1', breakdown_date: new Date(Date.now() - 36 * 3600000).toISOString(), problem_category: 'Hydraulic System', problem_description: 'Compactor blade stuck midway. High hydraulic oil leakage from rear cylinder seal.', severity: 'Critical', vehicle_condition: 'Immobile - Stopped at curbside', status: 'Repair', acknowledged_by: 'usr-fleet' },
+    { id: 'bk-102', breakdown_number: 'BD-2026-0090', vehicle_id: 'veh-3', driver_id: 'usr-driver-3', reported_by: 'Mohammad Aslam (Driver)', location: 'Bannadevi Chauraha, GT Road', ward_id: 'ward-4', breakdown_date: new Date(Date.now() - 14 * 3600000).toISOString(), problem_category: 'Brakes', problem_description: 'Air brake pressure dropping continuously, pedal spongy and loss of braking power.', severity: 'Critical', vehicle_condition: 'Parked at roadside safely', status: 'Workshop Received', acknowledged_by: 'usr-fleet' },
+    { id: 'bk-103', breakdown_number: 'BD-2026-0091', vehicle_id: 'veh-6', driver_id: 'usr-driver-4', reported_by: 'Satish Chandra (Driver)', location: 'Achal Tal Waterworks Road', ward_id: 'ward-7', breakdown_date: new Date(Date.now() - 72 * 3600000).toISOString(), problem_category: 'Special Equipment', problem_description: 'High pressure suction pump rotor jammed during desilting operation. Pressure relief valve damaged.', severity: 'High', vehicle_condition: 'Towed to central workshop', status: 'Diagnosis', acknowledged_by: 'usr-fleet' },
+    { id: 'bk-104', breakdown_number: 'BD-2026-0092', vehicle_id: 'veh-5', driver_id: null, reported_by: 'Manoj Gupta (SI Ward 6)', location: 'Sasni Gate Drain Clearance Site', ward_id: 'ward-6', breakdown_date: new Date(Date.now() - 48 * 3600000).toISOString(), problem_category: 'Hydraulics', problem_description: 'Front loader arm hydraulic pressure failure, erratic jerking when lifting heavy soil.', severity: 'High', vehicle_condition: 'Operational but unsafe for field work', status: 'Repair', acknowledged_by: 'usr-fleet' }
+  ];
+  const { error: bErr } = await supabase.from('breakdowns').upsert(breakdowns);
+  console.log('Breakdowns:', bErr ? bErr.message : 'OK');
+
+  // 8. Job Cards
+  const jobCards = [
+    { id: 'jc-201', job_card_number: 'JC-2026-0142', breakdown_id: 'bk-101', vehicle_id: 'veh-1', workshop_id: 'ws-central', complaint: 'Compactor blade stuck, hydraulic oil leak', diagnosis: 'Rear cylinder seal blown due to metal debris. Piston shaft minor scoring.', required_repair: 'Replace cylinder seal kit, polish hydraulic ram, flush hydraulic oil', assigned_mechanic_id: 'usr-mech-1', estimated_cost: 9500, actual_cost: 4850, inspection_status: 'Pending', status: 'Repair', remarks: 'Seal kit requisitioned. Assembly in progress by Kallu Mistri.' },
+    { id: 'jc-202', job_card_number: 'JC-2026-0143', breakdown_id: 'bk-102', vehicle_id: 'veh-3', workshop_id: 'ws-central', complaint: 'Air brake leakage, pedal loss', diagnosis: 'Dual brake valve internal diaphragm torn, rear left wheel cylinder leaking', required_repair: 'Replace brake shoe set and overhaul brake valve', assigned_mechanic_id: 'usr-mech-2', estimated_cost: 6800, actual_cost: 0, inspection_status: 'Pending', status: 'Diagnosis', remarks: 'Vehicle placed in inspection bay 2.' },
+    { id: 'jc-203', job_card_number: 'JC-2026-0144', breakdown_id: 'bk-103', vehicle_id: 'veh-6', workshop_id: 'ws-central', complaint: 'Suction pump rotor jammed', diagnosis: 'Severe cavitation in suction impeller, high pressure jetting hose burst', required_repair: 'Jetting hose replacement and impeller realignment', assigned_mechanic_id: 'usr-mech-1', estimated_cost: 32000, actual_cost: 0, inspection_status: 'Pending', status: 'Diagnosis', remarks: 'Awaiting clearance on purchase of high-pressure jetting hose.' },
+    { id: 'jc-204', job_card_number: 'JC-2026-0145', breakdown_id: 'bk-104', vehicle_id: 'veh-5', workshop_id: 'ws-central', complaint: 'Front loader hydraulic failure', diagnosis: 'Hydraulic pump valve spool stuck, pump pressure low (120 bar vs 210 bar spec)', required_repair: 'Overhaul hydraulic pump, clean spool valves', assigned_mechanic_id: 'usr-mech-1', estimated_cost: 12000, actual_cost: 0, inspection_status: 'Pending', status: 'Repair', remarks: 'Hydraulic pressure test scheduled post valve fitment.' }
+  ];
+  const { error: jErr } = await supabase.from('job_cards').upsert(jobCards);
+  console.log('Job Cards:', jErr ? jErr.message : 'OK');
+
+  // 9. Job Card Parts
+  const jobCardParts = [
+    { id: 'jcp-1', job_card_id: 'jc-201', part_id: 'prt-1', quantity: 1, unit_price: 4850, total_cost: 4850, issued_by: 'usr-workshop' }
+  ];
+  const { error: jcpErr } = await supabase.from('job_card_parts').upsert(jobCardParts);
+  console.log('Job Card Parts:', jcpErr ? jcpErr.message : 'OK');
+
+  // 10. Redeployments
+  const redeployments = [
+    { id: 'rd-301', original_vehicle_id: 'veh-1', replacement_vehicle_id: 'veh-4', ward_id: 'ward-1', zone_id: 'zone-1', deployment_location: 'Medical Road & Dodhpur Sanitation Beat', assigned_driver_id: 'usr-driver-1', reason: 'Vehicle UP81 BT 1024 undergoing emergency hydraulic cylinder repair. Replacement deployed to prevent waste accumulation.', deployment_date: new Date(Date.now() - 32 * 3600000).toISOString(), status: 'Active', approved_by: 'usr-fleet' }
+  ];
+  const { error: rErr } = await supabase.from('redeployments').upsert(redeployments);
+  console.log('Redeployments:', rErr ? rErr.message : 'OK');
+
+  // 11. Maintenance Schedules
+  const maintenanceSchedules = [
+    { id: 'ms-1', vehicle_id: 'veh-2', maintenance_type: 'Preventive', title: '40,000 KM Major Service', description: 'Engine oil change, oil filter, fuel filter, hydraulic tank suction strainer check', interval_km: 10000, interval_days: 90, last_service_date: '2026-06-15', next_due_date: '2026-09-18', status: 'Scheduled' },
+    { id: 'ms-2', vehicle_id: 'veh-4', maintenance_type: 'Preventive', title: '50,000 KM Full Brake & Wheel Bearing Overhaul', description: 'Grease packing of wheel hubs, brake lining check, air dryer filter replacement', interval_km: 15000, interval_days: 120, last_service_date: '2026-05-10', next_due_date: '2026-09-12', status: 'Overdue' },
+    { id: 'ms-3', vehicle_id: 'veh-7', maintenance_type: 'Preventive', title: 'Sweeping Broom & Vacuum Impeller Inspection', description: 'Main broom replacement, suction nozzle rubber skirt adjustment', interval_km: 5000, interval_days: 45, last_service_date: '2026-08-01', next_due_date: '2026-09-25', status: 'Scheduled' },
+    { id: 'ms-4', vehicle_id: 'veh-8', maintenance_type: 'Preventive', title: '15,000 KM CNG Kit & Spark Plug Service', description: 'CNG filter replacement, leak test, throttle body cleaning', interval_km: 7500, interval_days: 60, last_service_date: '2026-07-20', next_due_date: '2026-09-22', status: 'Scheduled' }
+  ];
+  const { error: mErr } = await supabase.from('maintenance_schedules').upsert(maintenanceSchedules);
+  console.log('Maintenance Schedules:', mErr ? mErr.message : 'OK');
+
+  // 12. Audit Logs
+  const auditLogs = [
+    { id: 'aud-1', entity_name: 'breakdown', entity_id: 'bk-101', action: 'REPORT_BREAKDOWN', performed_by: 'Rameshwar Dayal', performed_by_role: 'driver', details: { vehicle: 'UP81 BT 1024', problem: 'Hydraulic oil leakage and blade stuck' } },
+    { id: 'aud-2', entity_name: 'breakdown', entity_id: 'bk-101', action: 'ACKNOWLEDGE', performed_by: 'Mahesh Chandra Varshney', performed_by_role: 'fleet_manager', details: { acknowledged: true, dispatch_recovery: true } },
+    { id: 'aud-3', entity_name: 'job_card', entity_id: 'jc-201', action: 'CREATE_JOB_CARD', performed_by: 'Rakesh Babu Sharma', performed_by_role: 'workshop_manager', details: { job_card: 'JC-2026-0142', assigned_to: 'Kallu Mistri' } },
+    { id: 'aud-4', entity_name: 'job_card_parts', entity_id: 'jcp-1', action: 'ISSUE_SPARE_PART', performed_by: 'Rakesh Babu Sharma', performed_by_role: 'workshop_manager', details: { part: 'Hydraulic Main Cylinder Seal Kit', quantity: 1, cost: 4850 } },
+    { id: 'aud-5', entity_name: 'redeployment', entity_id: 'rd-301', action: 'DEPLOY_STANDBY', performed_by: 'Mahesh Chandra Varshney', performed_by_role: 'fleet_manager', details: { original: 'UP81 BT 1024', replacement: 'UP81 AT 4522', ward: 1 } }
+  ];
+  const { error: aErr } = await supabase.from('audit_logs').upsert(auditLogs);
+  console.log('Audit Logs:', aErr ? aErr.message : 'OK');
+
+  console.log('--- Database seeding completed successfully! ---');
+}
+
+seed().catch(console.error);

@@ -12,13 +12,15 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const saved = localStorage.getItem('vwfms_theme');
+    // Clear any obsolete dark mode cache to honor user's light mode request
+    const saved = localStorage.getItem('vwfms_theme_v2');
     if (saved === 'dark' || saved === 'light') return saved;
-    return 'light'; // Default to light mode as requested
+    // Default to light mode
+    return 'light';
   });
 
   useEffect(() => {
-    localStorage.setItem('vwfms_theme', theme);
+    localStorage.setItem('vwfms_theme_v2', theme);
     const root = document.documentElement;
     if (theme === 'light') {
       root.classList.remove('dark');
